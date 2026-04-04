@@ -11,12 +11,15 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  username     String    @unique
-  passwordHash String
-  salt         String
-  createdAt    DateTime  @default(now())
-  portfolio    Portfolio?
+  id                 String    @id @default(cuid())
+  username           String    @unique
+  email              String    @unique
+  passwordHash       String
+  salt               String
+  createdAt          DateTime  @default(now())
+  resetToken         String?
+  resetTokenExpiry   DateTime?
+  portfolio          Portfolio?
 }
 
 model Portfolio {

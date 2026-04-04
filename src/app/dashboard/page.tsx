@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import type { Portfolio, Holding } from "@prisma/client";
 import { PortfolioStats } from "@/components/PortfolioStats";
 import { HoldingsTable } from "@/components/HoldingsTable";
 import { AddHoldingForm } from "@/components/AddHoldingForm";
+import { HamburgerMenu } from "@/components/HamburgerMenu";
+import { ChangePasswordModal } from "@/components/ChangePasswordModal";
 
 type PortfolioWithHoldings = Portfolio & { holdings: Holding[] };
 
@@ -19,6 +21,7 @@ export default function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [selling, setSelling] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -86,10 +89,6 @@ export default function DashboardPage() {
     setStatusMsg("Portfolio reset. Starting cash: $10,000.00.");
   }
 
-  async function handleSignOut() {
-    await signOut({ callbackUrl: "/login" });
-  }
-
   if (status === "loading" || !portfolio) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted text-sm">
@@ -102,8 +101,12 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full min-h-screen px-5 py-7 pb-12">
+      {showChangePassword && (
+        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
+      )}
+
       {/* Header */}
-      <div className="flex justify-between items-end gap-4 mb-5">
+      <div className="flex justify-between items-start gap-4 mb-5">
         <div>
           <h1 className="text-[2.1rem] font-bold text-ink tracking-wide leading-tight">
             Investment Simulator
@@ -112,10 +115,13 @@ export default function DashboardPage() {
             Add stocks, refresh live prices from the internet, and track your total portfolio change.
           </div>
         </div>
-        <div className="text-right text-sm text-muted shrink-0">
-          Signed in as <strong className="text-ink">{session?.user?.name}</strong>
-          <br />
-          Simulation date: <strong className="text-ink">{simDate}</strong>
+        <div className="flex items-center gap-3 shrink-0 pt-1">
+          <div className="text-right text-sm text-muted">
+            Signed in as <strong className="text-ink">{session?.user?.name}</strong>
+            <br />
+            Simulation date: <strong className="text-ink">{simDate}</strong>
+          </div>
+          <HamburgerMenu onChangePassword={() => setShowChangePassword(true)} />
         </div>
       </div>
 
@@ -153,12 +159,6 @@ export default function DashboardPage() {
               className="rounded-xl bg-[#d8a23d] text-[#2e2416] font-bold py-3 text-sm hover:opacity-90 disabled:opacity-60 transition"
             >
               {refreshing ? "Refreshing…" : "Refresh Live Prices"}
-            </button>
-            <button
-              onClick={handleSignOut}
-              className="rounded-xl bg-[#61727a] text-white font-bold py-3 text-sm hover:opacity-90 transition"
-            >
-              Sign Out
             </button>
             <button
               onClick={handleReset}

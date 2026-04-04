@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export async function POST(req: NextRequest) {
-  const { username, password, confirmPassword } = await req.json();
+  const { username, email, password, confirmPassword } = await req.json();
 
   if (!username?.trim()) {
     return NextResponse.json({ error: "Enter a username." }, { status: 400 });
+  }
+  if (!email?.trim() || !isValidEmail(email.trim())) {
+    return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
   }
   if (!password) {
     return NextResponse.json({ error: "Enter a password." }, { status: 400 });
@@ -15,11 +22,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Passwords do not match." }, { status: 400 });
   }
 
-  const normalized = username.trim().toLowerCase();
+  const normalizedUsername = username.trim().toLowerCase();
+  const normalizedEmail = email.trim().toLowerCase();
 
-  const existing = await db.user.findUnique({ where: { username: normalized } });
-  if (existing) {
+  const existingUsername = await db.user.findUnique({ where: { username: normalizedUsername } });
+  if (existingUsername) {
     return NextResponse.json({ error: "That username already exists." }, { status: 409 });
+  }
+
+  const existingEmail = await db.user.findUnique({ where: { email: normalizedEmail } });
+  if (existingEmail) {
+    return NextResponse.json({ error: "An account with that email already exists." }, { status: 409 });
   }
 
   const salt = await bcrypt.genSalt(12);
@@ -27,7 +40,8 @@ export async function POST(req: NextRequest) {
 
   const user = await db.user.create({
     data: {
-      username: normalized,
+      username: normalizedUsername,
+      email: normalizedEmail,
       passwordHash,
       salt,
       portfolio: {

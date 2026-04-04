@@ -8,12 +8,13 @@ import Link from "next/link";
 export default function RegisterPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
@@ -23,11 +24,10 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
-
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password, confirmPassword }),
+      body: JSON.stringify({ username, email, password, confirmPassword }),
     });
 
     if (!res.ok) {
@@ -37,8 +37,7 @@ export default function RegisterPage() {
       return;
     }
 
-    // Auto sign-in after registration
-    await signIn("credentials", { username: username.trim(), password, redirect: false });
+    await signIn("credentials", { email: email.trim(), password, redirect: false });
     router.push("/dashboard");
   }
 
@@ -48,10 +47,7 @@ export default function RegisterPage() {
         <h1 className="text-3xl font-bold text-ink mb-1">Investment Simulator</h1>
         <p className="text-muted mb-8 text-sm">Create an account to get started.</p>
 
-        <div
-          className="rounded-2xl border border-line bg-panel p-6"
-          style={{ boxShadow: "var(--shadow)" }}
-        >
+        <div className="rounded-2xl border border-line bg-panel p-6" style={{ boxShadow: "var(--shadow)" }}>
           <h2 className="text-lg font-bold text-ink mb-5">Create Account</h2>
 
           {error && (
@@ -69,6 +65,17 @@ export default function RegisterPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 autoFocus
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm text-muted">
+              Email
+              <input
+                type="email"
+                className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </label>
 
@@ -104,7 +111,7 @@ export default function RegisterPage() {
           </form>
 
           <p className="mt-4 text-xs text-muted">
-            Accounts are stored locally with salted password hashes. Each user gets a separate portfolio.
+            Accounts are stored with salted password hashes. Each user gets a separate portfolio.
           </p>
         </div>
 
