@@ -9,12 +9,12 @@ export async function GET() {
   const userId = getUserId(session);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const portfolio = await db.portfolio.findUnique({
+  const portfolio = await db.portfolio.upsert({
     where: { userId },
+    create: { userId, cash: 10000, startingCash: 10000, currentDay: new Date() },
+    update: {},
     include: { holdings: { orderBy: { createdAt: "asc" } } },
   });
-
-  if (!portfolio) return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
 
   return NextResponse.json(portfolio);
 }
