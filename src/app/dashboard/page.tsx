@@ -117,7 +117,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-3 shrink-0 pt-1">
           <div className="text-right text-sm text-muted">
-            Signed in as <strong className="text-ink">{session?.user?.name}</strong>
+            Signed in as <strong className="text-ink">{session?.user?.email}</strong>
             <br />
             Simulation date: <strong className="text-ink">{simDate}</strong>
           </div>

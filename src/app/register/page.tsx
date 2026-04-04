@@ -7,7 +7,6 @@ import Link from "next/link";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,7 +26,7 @@ export default function RegisterPage() {
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password, confirmPassword }),
+      body: JSON.stringify({ email, password, confirmPassword }),
     });
 
     if (!res.ok) {
@@ -58,17 +57,6 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1 text-sm text-muted">
-              Username
-              <input
-                className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                autoFocus
-              />
-            </label>
-
-            <label className="flex flex-col gap-1 text-sm text-muted">
               Email
               <input
                 type="email"
@@ -76,6 +64,7 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoFocus
               />
             </label>
 
@@ -109,10 +98,6 @@ export default function RegisterPage() {
               {loading ? "Creating account…" : "Create Account"}
             </button>
           </form>
-
-          <p className="mt-4 text-xs text-muted">
-            Accounts are stored with salted password hashes. Each user gets a separate portfolio.
-          </p>
         </div>
 
         <p className="mt-5 text-center text-sm text-muted">

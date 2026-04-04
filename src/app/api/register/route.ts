@@ -7,11 +7,8 @@ function isValidEmail(email: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const { username, email, password, confirmPassword } = await req.json();
+  const { email, password, confirmPassword } = await req.json();
 
-  if (!username?.trim()) {
-    return NextResponse.json({ error: "Enter a username." }, { status: 400 });
-  }
   if (!email?.trim() || !isValidEmail(email.trim())) {
     return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
   }
@@ -22,16 +19,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Passwords do not match." }, { status: 400 });
   }
 
-  const normalizedUsername = username.trim().toLowerCase();
   const normalizedEmail = email.trim().toLowerCase();
 
-  const existingUsername = await db.user.findUnique({ where: { username: normalizedUsername } });
-  if (existingUsername) {
-    return NextResponse.json({ error: "That username already exists." }, { status: 409 });
-  }
-
-  const existingEmail = await db.user.findUnique({ where: { email: normalizedEmail } });
-  if (existingEmail) {
+  const existing = await db.user.findUnique({ where: { email: normalizedEmail } });
+  if (existing) {
     return NextResponse.json({ error: "An account with that email already exists." }, { status: 409 });
   }
 
@@ -40,7 +31,6 @@ export async function POST(req: NextRequest) {
 
   const user = await db.user.create({
     data: {
-      username: normalizedUsername,
       email: normalizedEmail,
       passwordHash,
       salt,
