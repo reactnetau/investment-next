@@ -1,4 +1,4 @@
-const API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
+const API_KEY = process.env.FINNHUB_API_KEY;
 
 /**
  * If the code has no dot we treat it as an ASX stock and append .AX,
@@ -10,28 +10,27 @@ function toSymbol(code: string): string {
 }
 
 /**
- * Fetch the latest price for a stock code from Alpha Vantage.
+ * Fetch the latest price for a stock code from Finnhub.
  * Returns null if the price cannot be determined.
  */
 export async function fetchLivePrice(code: string): Promise<number | null> {
   if (!API_KEY) {
-    console.error("ALPHA_VANTAGE_API_KEY is not set");
+    console.error("FINNHUB_API_KEY is not set");
     return null;
   }
 
   const symbol = toSymbol(code);
-  const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${API_KEY}`;
+  const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${API_KEY}`;
 
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
 
     const data = await res.json();
-    const priceStr = data?.["Global Quote"]?.["05. price"];
-    if (!priceStr) return null;
-
-    const price = parseFloat(priceStr);
-    return price > 0 ? price : null;
+    // Finnhub returns { c: currentPrice, h, l, o, pc, t }
+    // c === 0 means no data found for the symbol
+    const price = data?.c;
+    return price && price > 0 ? price : null;
   } catch (e) {
     console.error("fetchLivePrice error:", e);
     return null;
