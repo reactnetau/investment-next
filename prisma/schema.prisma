@@ -1,0 +1,46 @@
+// This is your Prisma schema file.
+// Run `yarn prisma:push` to sync with the database.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  passwordHash String
+  salt         String
+  createdAt    DateTime  @default(now())
+  portfolio    Portfolio?
+}
+
+model Portfolio {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cash         Float     @default(10000)
+  startingCash Float     @default(10000)
+  currentDay   DateTime  @default(now())
+  holdings     Holding[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Holding {
+  id           String    @id @default(cuid())
+  portfolioId  String
+  portfolio    Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  code         String
+  buyPrice     Float
+  quantity     Float
+  currentPrice Float?
+  purchasedOn  DateTime
+  volatility   Float
+  momentumBias Float
+  createdAt    DateTime  @default(now())
+}

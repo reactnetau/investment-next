@@ -1,0 +1,44 @@
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { db } from "@/lib/db";
+
+export async function POST(req: NextRequest) {
+  const { username, password, confirmPassword } = await req.json();
+
+  if (!username?.trim()) {
+    return NextResponse.json({ error: "Enter a username." }, { status: 400 });
+  }
+  if (!password) {
+    return NextResponse.json({ error: "Enter a password." }, { status: 400 });
+  }
+  if (password !== confirmPassword) {
+    return NextResponse.json({ error: "Passwords do not match." }, { status: 400 });
+  }
+
+  const normalized = username.trim().toLowerCase();
+
+  const existing = await db.user.findUnique({ where: { username: normalized } });
+  if (existing) {
+    return NextResponse.json({ error: "That username already exists." }, { status: 409 });
+  }
+
+  const salt = await bcrypt.genSalt(12);
+  const passwordHash = await bcrypt.hash(password, salt);
+
+  const user = await db.user.create({
+    data: {
+      username: normalized,
+      passwordHash,
+      salt,
+      portfolio: {
+        create: {
+          cash: 10000,
+          startingCash: 10000,
+          currentDay: new Date(),
+        },
+      },
+    },
+  });
+
+  return NextResponse.json({ userId: user.id }, { status: 201 });
+}
