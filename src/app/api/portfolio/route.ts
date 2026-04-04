@@ -5,18 +5,23 @@ import { getSession, getUserId } from "@/lib/session";
 
 /** GET /api/portfolio — fetch current portfolio for the signed-in user */
 export async function GET() {
-  const session = await getSession();
-  const userId = getUserId(session);
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await getSession();
+    const userId = getUserId(session);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const portfolio = await db.portfolio.upsert({
-    where: { userId },
-    create: { userId, cash: 10000, startingCash: 10000, currentDay: new Date() },
-    update: {},
-    include: { holdings: { orderBy: { createdAt: "asc" } } },
-  });
+    const portfolio = await db.portfolio.upsert({
+      where: { userId },
+      create: { userId, cash: 10000, startingCash: 10000, currentDay: new Date() },
+      update: {},
+      include: { holdings: { orderBy: { createdAt: "asc" } } },
+    });
 
-  return NextResponse.json(portfolio);
+    return NextResponse.json(portfolio);
+  } catch (e) {
+    console.error("GET /api/portfolio error:", e);
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
 }
 
 /** PATCH /api/portfolio — reset portfolio */
