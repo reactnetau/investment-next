@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { fetchLivePrice } from "@/lib/price";
+import { getCachedPrice } from "@/lib/price";
 import { getSession, getUserId } from "@/lib/session";
 import { FREE_HOLDING_LIMIT } from "@/lib/plans";
 
@@ -22,8 +22,8 @@ export async function POST(req: NextRequest) {
 
   const normalizedCode = code.trim().toUpperCase();
 
-  // Fetch live price (always attempt it)
-  const livePrice = await fetchLivePrice(normalizedCode);
+  // Get price from cache (falls back to Yahoo and saves to cache if not found)
+  const livePrice = await getCachedPrice(normalizedCode);
 
   let buyPriceNum: number;
   let usedLive = false;

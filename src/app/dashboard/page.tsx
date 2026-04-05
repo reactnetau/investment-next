@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Portfolio, Holding } from "@prisma/client";
+
+type HoldingWithAge = Holding & { priceUpdatedAt: string | null };
 import { PortfolioStats } from "@/components/PortfolioStats";
 import { HoldingsTable } from "@/components/HoldingsTable";
 import { AddHoldingForm } from "@/components/AddHoldingForm";
@@ -11,8 +13,9 @@ import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { ChangePasswordModal } from "@/components/ChangePasswordModal";
 import { SellModal } from "@/components/SellModal";
 import { FREE_HOLDING_LIMIT } from "@/lib/plans";
+import { PriceCountdown } from "@/components/PriceCountdown";
 
-type PortfolioWithHoldings = Portfolio & { holdings: Holding[]; plan: string };
+type PortfolioWithHoldings = Portfolio & { holdings: HoldingWithAge[]; plan: string; nextPriceRefresh: string | null };
 
 export default function DashboardPage() {
   return (
@@ -35,7 +38,6 @@ function Dashboard() {
   const [resetting, setResetting] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -117,9 +119,7 @@ function Dashboard() {
 
   async function handleCancelSubscription() {
     if (!confirm("Cancel your Pro subscription? You'll keep access until the end of your billing period.")) return;
-    setCancelling(true);
     const res = await fetch("/api/stripe/cancel", { method: "POST" });
-    setCancelling(false);
     const data = await res.json();
     setStatusMsg(data.message ?? data.error ?? "Something went wrong.");
     if (res.ok) loadPortfolio();
@@ -270,9 +270,12 @@ function Dashboard() {
         >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-base font-bold text-ink">Portfolio</h2>
-            {isFree && (
-              <span className="text-xs text-muted">{portfolio.holdings.length} / {FREE_HOLDING_LIMIT} stocks</span>
-            )}
+            <div className="flex items-center gap-3">
+              <PriceCountdown nextRefresh={portfolio.nextPriceRefresh} />
+              {isFree && (
+                <span className="text-xs text-muted">{portfolio.holdings.length} / {FREE_HOLDING_LIMIT} stocks</span>
+              )}
+            </div>
           </div>
           <HoldingsTable
             holdings={portfolio.holdings}

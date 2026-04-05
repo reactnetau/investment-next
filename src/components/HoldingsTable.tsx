@@ -20,8 +20,18 @@ function colorClass(n: number) {
   return n > 0 ? "text-good font-bold" : "text-bad font-bold";
 }
 
+function timeAgo(date: Date | string): string {
+  const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+type HoldingWithAge = Holding & { priceUpdatedAt: string | null };
+
 interface Props {
-  holdings: Holding[];
+  holdings: HoldingWithAge[];
   onSell: (holding: Holding) => void;
   selling: string | null;
 }
@@ -78,7 +88,16 @@ export function HoldingsTable({ holdings, onSell, selling }: Props) {
                 <td className="px-3 py-3 text-center font-semibold text-ink">{h.code}</td>
                 <td className="px-3 py-3 text-center">{fmt(h.buyPrice)}</td>
                 <td className="px-3 py-3 text-center">
-                  {h.currentPrice !== null ? fmt(h.currentPrice) : <span className="text-muted">N/A</span>}
+                  {h.currentPrice !== null ? (
+                    <div>
+                      <div>{fmt(h.currentPrice)}</div>
+                      {h.priceUpdatedAt && (
+                        <div className="text-[10px] text-muted font-normal">{timeAgo(h.priceUpdatedAt)}</div>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-muted">N/A</span>
+                  )}
                 </td>
                 <td className="px-3 py-3 text-center">{fmtQty(h.quantity)}</td>
                 <td className={`px-3 py-3 text-center ${colorClass(pct)}`}>{fmtPct(pct)}</td>

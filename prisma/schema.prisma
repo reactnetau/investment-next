@@ -36,6 +36,12 @@ model Portfolio {
   updatedAt    DateTime  @updatedAt
 }
 
+model Price {
+  code      String   @id
+  price     Float
+  updatedAt DateTime @updatedAt
+}
+
 model Holding {
   id           String    @id @default(cuid())
   portfolioId  String

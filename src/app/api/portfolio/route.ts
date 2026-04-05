@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { fetchLivePrice } from "@/lib/price";
+import { getCachedPrice } from "@/lib/price";
 import { getSession, getUserId } from "@/lib/session";
 
 /** GET /api/portfolio — fetch current portfolio for the signed-in user */
@@ -20,7 +20,30 @@ export async function GET() {
       db.user.findUnique({ where: { id: userId }, select: { plan: true } }),
     ]);
 
-    return NextResponse.json({ ...portfolio, plan: user?.plan ?? "free" });
+    // Attach price cache timestamps to each holding
+    const codes = [...new Set(portfolio.holdings.map((h) => h.code))];
+    const prices = await db.price.findMany({ where: { code: { in: codes } } });
+    const priceMap = Object.fromEntries(prices.map((p) => [p.code, p.updatedAt]));
+
+    const holdingsWithAge = portfolio.holdings.map((h) => ({
+      ...h,
+      priceUpdatedAt: priceMap[h.code] ?? null,
+    }));
+
+    // Next refresh = most recent cache update + 2 hours
+    const mostRecentUpdate = prices.reduce<Date | null>((latest, p) => {
+      return !latest || p.updatedAt > latest ? p.updatedAt : latest;
+    }, null);
+    const nextPriceRefresh = mostRecentUpdate
+      ? new Date(mostRecentUpdate.getTime() + 2 * 60 * 60 * 1000)
+      : null;
+
+    return NextResponse.json({
+      ...portfolio,
+      holdings: holdingsWithAge,
+      plan: user?.plan ?? "free",
+      nextPriceRefresh,
+    });
   } catch (e) {
     console.error("GET /api/portfolio error:", e);
     return NextResponse.json({ error: String(e) }, { status: 500 });
@@ -58,7 +81,7 @@ export async function PATCH(req: NextRequest) {
 
     await Promise.all(
       portfolio.holdings.map(async (h) => {
-        const price = await fetchLivePrice(h.code);
+        const price = await getCachedPrice(h.code);
         if (price !== null && price > 0) {
           await db.holding.update({
             where: { id: h.id },
