@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { refreshAllCachedPrices } from "@/lib/price";
 
-// This endpoint is called by the Railway cron service every 2 hours.
+// This endpoint is called by the Railway cron service on a fixed schedule.
 // Protected by a shared secret so it can't be triggered publicly.
 export async function POST(req: NextRequest) {
   const auth = req.headers.get("authorization");

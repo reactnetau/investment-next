@@ -3,6 +3,18 @@ import { db } from "@/lib/db";
 import { getCachedPrice, getAudUsdRate, fetchLivePrice } from "@/lib/price";
 import { getSession, getUserId } from "@/lib/session";
 
+function getNextDailyUtcRefresh(hourUtc: number, minuteUtc = 0): Date {
+  const now = new Date();
+  const next = new Date(now);
+  next.setUTCHours(hourUtc, minuteUtc, 0, 0);
+
+  if (next.getTime() <= now.getTime()) {
+    next.setUTCDate(next.getUTCDate() + 1);
+  }
+
+  return next;
+}
+
 /** GET /api/portfolio — fetch current portfolio for the signed-in user */
 export async function GET() {
   try {
@@ -33,13 +45,8 @@ export async function GET() {
       priceUpdatedAt: priceMap[h.code] ?? null,
     }));
 
-    // Next refresh = most recent cache update + 2 hours
-    const mostRecentUpdate = prices.reduce<Date | null>((latest, p) => {
-      return !latest || p.updatedAt > latest ? p.updatedAt : latest;
-    }, null);
-    const nextPriceRefresh = mostRecentUpdate
-      ? new Date(mostRecentUpdate.getTime() + 2 * 60 * 60 * 1000)
-      : null;
+    // Match the Railway cron schedule: 0 7 * * * (7:00 UTC daily).
+    const nextPriceRefresh = prices.length > 0 ? getNextDailyUtcRefresh(7, 0) : null;
 
     return NextResponse.json({
       ...portfolio,
@@ -117,8 +124,7 @@ export async function PATCH(req: NextRequest) {
     const priceMap = Object.fromEntries(prices.map((p) => [p.code, p.updatedAt]));
     const holdingsWithAge = updated.holdings.map((h) => ({ ...h, priceUpdatedAt: priceMap[h.code] ?? null }));
 
-    const mostRecentUpdate = prices.reduce<Date | null>((latest, p) => (!latest || p.updatedAt > latest ? p.updatedAt : latest), null);
-    const nextPriceRefresh = mostRecentUpdate ? new Date(mostRecentUpdate.getTime() + 2 * 60 * 60 * 1000) : null;
+    const nextPriceRefresh = prices.length > 0 ? getNextDailyUtcRefresh(7, 0) : null;
 
     return NextResponse.json({
       ...updated,
