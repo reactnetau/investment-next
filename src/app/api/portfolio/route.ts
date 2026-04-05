@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCachedPrice, getAudUsdRate } from "@/lib/price";
+import { getCachedPrice, getAudUsdRate, fetchLivePrice } from "@/lib/price";
 import { getSession, getUserId } from "@/lib/session";
 
 /** GET /api/portfolio — fetch current portfolio for the signed-in user */
@@ -86,12 +86,20 @@ export async function PATCH(req: NextRequest) {
 
     await Promise.all(
       portfolio.holdings.map(async (h) => {
-        const result = await getCachedPrice(h.code);
+        // Fetch fresh from Yahoo and update both the Price cache and the holding
+        const result = await fetchLivePrice(h.code);
         if (result !== null && result.price > 0) {
-          await db.holding.update({
-            where: { id: h.id },
-            data: { currentPrice: result.price, priceCurrency: result.currency },
-          });
+          await Promise.all([
+            db.price.upsert({
+              where: { code: h.code },
+              update: { price: result.price, currency: result.currency },
+              create: { code: h.code, price: result.price, currency: result.currency },
+            }),
+            db.holding.update({
+              where: { id: h.id },
+              data: { currentPrice: result.price, priceCurrency: result.currency },
+            }),
+          ]);
         }
       })
     );
