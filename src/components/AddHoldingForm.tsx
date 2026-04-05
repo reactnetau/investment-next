@@ -5,9 +5,10 @@ import { useState } from "react";
 interface Props {
   onAdded: () => void;
   onStatus: (msg: string) => void;
+  onUpgradeRequired: () => void;
 }
 
-export function AddHoldingForm({ onAdded, onStatus }: Props) {
+export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) {
   const [code, setCode] = useState("");
   const [buyPrice, setBuyPrice] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -59,6 +60,10 @@ export function AddHoldingForm({ onAdded, onStatus }: Props) {
 
     if (!res.ok) {
       const data = await res.json();
+      if (data.upgrade) {
+        onUpgradeRequired();
+        return;
+      }
       onStatus(data.error ?? "Failed to add stock.");
       return;
     }

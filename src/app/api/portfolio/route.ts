@@ -10,14 +10,17 @@ export async function GET() {
     const userId = getUserId(session);
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const portfolio = await db.portfolio.upsert({
-      where: { userId },
-      create: { userId, cash: 10000, startingCash: 10000, currentDay: new Date() },
-      update: {},
-      include: { holdings: { orderBy: { createdAt: "asc" } } },
-    });
+    const [portfolio, user] = await Promise.all([
+      db.portfolio.upsert({
+        where: { userId },
+        create: { userId, cash: 10000, startingCash: 10000, currentDay: new Date() },
+        update: {},
+        include: { holdings: { orderBy: { createdAt: "asc" } } },
+      }),
+      db.user.findUnique({ where: { id: userId }, select: { plan: true } }),
+    ]);
 
-    return NextResponse.json(portfolio);
+    return NextResponse.json({ ...portfolio, plan: user?.plan ?? "free" });
   } catch (e) {
     console.error("GET /api/portfolio error:", e);
     return NextResponse.json({ error: String(e) }, { status: 500 });

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { Portfolio, Holding } from "@prisma/client";
 import { PortfolioStats } from "@/components/PortfolioStats";
 import { HoldingsTable } from "@/components/HoldingsTable";
@@ -10,12 +10,14 @@ import { AddHoldingForm } from "@/components/AddHoldingForm";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { ChangePasswordModal } from "@/components/ChangePasswordModal";
 import { SellModal } from "@/components/SellModal";
+import { FREE_HOLDING_LIMIT } from "@/lib/stripe";
 
-type PortfolioWithHoldings = Portfolio & { holdings: Holding[] };
+type PortfolioWithHoldings = Portfolio & { holdings: Holding[]; plan: string };
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [portfolio, setPortfolio] = useState<PortfolioWithHoldings | null>(null);
   const [statusMsg, setStatusMsg] = useState("Loading portfolio…");
@@ -24,6 +26,7 @@ export default function DashboardPage() {
   const [sellTarget, setSellTarget] = useState<Holding | null>(null);
   const [resetting, setResetting] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [upgrading, setUpgrading] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -39,10 +42,19 @@ export default function DashboardPage() {
   useEffect(() => {
     if (status === "authenticated") {
       loadPortfolio().then(() => {
-        setStatusMsg(`Signed in as ${session?.user?.name ?? ""}. Portfolio loaded.`);
+        const upgradeParam = searchParams.get("upgrade");
+        if (upgradeParam === "success") {
+          setStatusMsg("You're now on Pro. Welcome to Investment Simulator Pro!");
+          router.replace("/dashboard");
+        } else if (upgradeParam === "cancelled") {
+          setStatusMsg("Upgrade cancelled.");
+          router.replace("/dashboard");
+        } else {
+          setStatusMsg(`Signed in as ${session?.user?.name ?? ""}. Portfolio loaded.`);
+        }
       });
     }
-  }, [status, loadPortfolio, session]);
+  }, [status, loadPortfolio, session, searchParams, router]);
 
   async function handleRefreshPrices() {
     setRefreshing(true);
@@ -94,6 +106,18 @@ export default function DashboardPage() {
     setStatusMsg("Portfolio reset. Starting cash: $10,000.00.");
   }
 
+  async function handleUpgrade() {
+    setUpgrading(true);
+    const res = await fetch("/api/stripe/checkout", { method: "POST" });
+    if (!res.ok) {
+      setUpgrading(false);
+      setStatusMsg("Could not start checkout. Try again.");
+      return;
+    }
+    const { url } = await res.json();
+    window.location.href = url;
+  }
+
   if (status === "loading" || !portfolio) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted text-sm">
@@ -101,6 +125,9 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const isFree = portfolio.plan === "free";
+  const atLimit = isFree && portfolio.holdings.length >= FREE_HOLDING_LIMIT;
 
   return (
     <div className="w-full min-h-screen px-5 py-7 pb-12">
@@ -124,13 +151,33 @@ export default function DashboardPage() {
             Investment Simulator
           </h1>
           <div className="text-muted text-sm mt-1">
-            Add stocks, refresh live prices from the internet, and track your total portfolio change.
+            Add stocks, refresh live prices from the internet, and track your total portfolio change. Supports ASX and NASDAQ.
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0 pt-1">
           <HamburgerMenu onChangePassword={() => setShowChangePassword(true)} />
         </div>
       </div>
+
+      {/* Upgrade banner — shown when free user hits the limit */}
+      {atLimit && (
+        <div
+          className="rounded-2xl border border-[#d8a23d] bg-[#fffbf0] px-4 py-3 mb-4 flex items-center justify-between gap-4"
+          style={{ boxShadow: "var(--shadow)" }}
+        >
+          <div>
+            <span className="text-sm font-bold text-ink">You've reached the free limit of {FREE_HOLDING_LIMIT} stocks.</span>
+            <span className="text-sm text-muted ml-2">Upgrade to Pro to add unlimited stocks.</span>
+          </div>
+          <button
+            onClick={handleUpgrade}
+            disabled={upgrading}
+            className="shrink-0 rounded-xl bg-[#d8a23d] text-[#2e2416] font-bold px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60 transition"
+          >
+            {upgrading ? "Redirecting…" : "Upgrade to Pro — $5/mo"}
+          </button>
+        </div>
+      )}
 
       {/* Status bar */}
       <div
@@ -155,6 +202,7 @@ export default function DashboardPage() {
           <AddHoldingForm
             onAdded={() => loadPortfolio()}
             onStatus={(msg) => setStatusMsg(msg)}
+            onUpgradeRequired={handleUpgrade}
           />
 
           <h2 className="text-base font-bold text-ink mt-6 mb-3">Portfolio Actions</h2>
@@ -177,9 +225,11 @@ export default function DashboardPage() {
           </div>
 
           <p className="mt-4 text-xs text-muted leading-relaxed">
-            Starting cash is $10,000.00. Enter a stock code (ASX codes auto-append .AX),
-            a buy-in price or leave blank to use the live price. Enter either a quantity
-            or an AUD amount.
+            Starting cash is $10,000.00. Enter an ASX code (e.g. BHP) or NASDAQ/NYSE code (e.g. META, AAPL).
+            Leave the buy-in price blank to use the live price. Enter either a quantity or an AUD amount.
+            {isFree && (
+              <span className="block mt-1">Free accounts can hold up to {FREE_HOLDING_LIMIT} stocks. <button onClick={handleUpgrade} className="text-accent underline">Upgrade to Pro</button> for unlimited.</span>
+            )}
           </p>
         </div>
 
@@ -188,7 +238,12 @@ export default function DashboardPage() {
           className="rounded-[20px] border border-line bg-panel p-5"
           style={{ boxShadow: "var(--shadow)" }}
         >
-          <h2 className="text-base font-bold text-ink mb-4">Portfolio</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-base font-bold text-ink">Portfolio</h2>
+            {isFree && (
+              <span className="text-xs text-muted">{portfolio.holdings.length} / {FREE_HOLDING_LIMIT} stocks</span>
+            )}
+          </div>
           <HoldingsTable
             holdings={portfolio.holdings}
             onSell={(holding) => setSellTarget(holding)}

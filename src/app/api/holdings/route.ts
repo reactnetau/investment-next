@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { fetchLivePrice } from "@/lib/price";
 import { getSession, getUserId } from "@/lib/session";
+import { FREE_HOLDING_LIMIT } from "@/lib/stripe";
 
 function moneyToCents(value: number): number {
   return Math.round(value * 100);
@@ -59,8 +60,20 @@ export async function POST(req: NextRequest) {
 
   const cost = buyPriceNum * quantityNum;
 
-  const portfolio = await db.portfolio.findUnique({ where: { userId } });
+  const portfolio = await db.portfolio.findUnique({
+    where: { userId },
+    include: { _count: { select: { holdings: true } } },
+  });
   if (!portfolio) return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
+
+  // Enforce free tier holding limit
+  const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
+  if (user?.plan === "free" && portfolio._count.holdings >= FREE_HOLDING_LIMIT) {
+    return NextResponse.json(
+      { error: "Free accounts are limited to 5 stocks. Upgrade to Pro to add more.", upgrade: true },
+      { status: 403 }
+    );
+  }
 
   if (moneyToCents(cost) > moneyToCents(portfolio.cash)) {
     return NextResponse.json(

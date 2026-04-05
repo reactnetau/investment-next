@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma db push && next build",
     "start": "next start",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -19,7 +19,8 @@
     "next-auth": "^4.24.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "resend": "^6.10.0"
+    "resend": "^6.10.0",
+    "stripe": "^22.0.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
