@@ -7,7 +7,7 @@ function isValidEmail(email: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const { email, password, confirmPassword } = await req.json();
+  const { email, password, confirmPassword, currency } = await req.json();
 
   if (!email?.trim() || !isValidEmail(email.trim())) {
     return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
 
   const salt = await bcrypt.genSalt(12);
   const passwordHash = await bcrypt.hash(password, salt);
+  const portfolioCurrency = currency === "usd" ? "usd" : "aud";
 
   const user = await db.user.create({
     data: {
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest) {
         create: {
           cash: 10000,
           startingCash: 10000,
+          currency: portfolioCurrency,
           currentDay: new Date(),
         },
       },

@@ -1,10 +1,8 @@
 "use client";
 
 import type { Holding } from "@prisma/client";
-
-function fmt(n: number) {
-  return `$${n.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
+import { formatMoney, convertAmount } from "@/lib/currency";
+import type { Currency } from "@/lib/currency";
 
 function fmtQty(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(4).replace(/\.?0+$/, "");
@@ -28,15 +26,19 @@ function timeAgo(date: Date | string): string {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-type HoldingWithAge = Holding & { priceUpdatedAt: string | null };
+type HoldingWithAge = Holding & { priceUpdatedAt: string | null; priceCurrency?: string };
 
 interface Props {
   holdings: HoldingWithAge[];
   onSell: (holding: Holding) => void;
   selling: string | null;
+  currency: Currency;
+  fxRate: number;
 }
 
-export function HoldingsTable({ holdings, onSell, selling }: Props) {
+export function HoldingsTable({ holdings, onSell, selling, currency, fxRate }: Props) {
+  const fmt = (n: number) => formatMoney(n, currency);
+
   if (holdings.length === 0) {
     return (
       <div className="text-center text-muted py-8 text-sm">No stocks added yet.</div>
@@ -48,22 +50,8 @@ export function HoldingsTable({ holdings, onSell, selling }: Props) {
       <table className="w-full border-collapse text-sm whitespace-nowrap">
         <thead>
           <tr className="bg-[#efe6d8] text-[#56483b]">
-            {[
-              "Code",
-              "Buy Price",
-              "Current Price",
-              "Qty",
-              "% Change",
-              "Days Held",
-              "Invested",
-              "Current Value",
-              "P/L",
-              "Action",
-            ].map((h) => (
-              <th
-                key={h}
-                className="px-3 py-3 text-center text-xs uppercase tracking-wider font-semibold"
-              >
+            {["Code", "Buy Price", "Current Price", "Qty", "% Change", "Days Held", "Invested", "Current Value", "P/L", "Action"].map((h) => (
+              <th key={h} className="px-3 py-3 text-center text-xs uppercase tracking-wider font-semibold">
                 {h}
               </th>
             ))}
@@ -71,26 +59,35 @@ export function HoldingsTable({ holdings, onSell, selling }: Props) {
         </thead>
         <tbody>
           {holdings.map((h) => {
-            const currentPrice = h.currentPrice ?? h.buyPrice;
-            const currentValue = currentPrice * h.quantity;
-            const invested = h.buyPrice * h.quantity;
+            const pc = (h.priceCurrency ?? "aud") as Currency;
+            const nativePrice = h.currentPrice ?? h.buyPrice;
+            const nativeBuy = h.buyPrice;
+
+            // Convert to display currency
+            const displayPrice = convertAmount(nativePrice, pc, currency, fxRate);
+            const displayBuy = convertAmount(nativeBuy, pc, currency, fxRate);
+            const currentValue = displayPrice * h.quantity;
+            const invested = displayBuy * h.quantity;
             const pl = currentValue - invested;
-            const pct = h.buyPrice > 0 ? ((currentPrice - h.buyPrice) / h.buyPrice) * 100 : 0;
-            const daysHeld = Math.max(
-              0,
-              Math.floor(
-                (Date.now() - new Date(h.purchasedOn).getTime()) / (1000 * 60 * 60 * 24)
-              )
-            );
+            const pct = displayBuy > 0 ? ((displayPrice - displayBuy) / displayBuy) * 100 : 0;
+            const daysHeld = Math.max(0, Math.floor((Date.now() - new Date(h.purchasedOn).getTime()) / (1000 * 60 * 60 * 24)));
+
+            // Show currency badge if the stock's native currency differs from portfolio currency
+            const showBadge = pc !== currency;
 
             return (
               <tr key={h.id} className="border-b border-line last:border-b-0 hover:bg-[#f9f5ed] transition-colors">
-                <td className="px-3 py-3 text-center font-semibold text-ink">{h.code}</td>
-                <td className="px-3 py-3 text-center">{fmt(h.buyPrice)}</td>
+                <td className="px-3 py-3 text-center">
+                  <div className="font-semibold text-ink">{h.code}</div>
+                  {showBadge && (
+                    <div className="text-[10px] text-muted">{pc.toUpperCase()}</div>
+                  )}
+                </td>
+                <td className="px-3 py-3 text-center">{fmt(displayBuy)}</td>
                 <td className="px-3 py-3 text-center">
                   {h.currentPrice !== null ? (
                     <div>
-                      <div>{fmt(h.currentPrice)}</div>
+                      <div>{fmt(displayPrice)}</div>
                       {h.priceUpdatedAt && (
                         <div className="text-[10px] text-muted font-normal">{timeAgo(h.priceUpdatedAt)}</div>
                       )}

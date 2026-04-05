@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSession, getUserId } from "@/lib/session";
+import { getAudUsdRate } from "@/lib/price";
+import { convertAmount } from "@/lib/currency";
+import type { Currency } from "@/lib/currency";
 
 function moneyToCents(value: number): number {
   return Math.round(value * 100);
@@ -24,12 +27,18 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const saleValue =
-    holding.currentPrice !== null
-      ? holding.currentPrice * holding.quantity
-      : holding.buyPrice * holding.quantity;
+  const priceCurrency = (holding.priceCurrency ?? "aud") as Currency;
+  const portfolioCurrency = (portfolio.currency ?? "aud") as Currency;
+  const fxRate = await getAudUsdRate();
 
-  const profit = saleValue - holding.buyPrice * holding.quantity;
+  const nativeSalePrice = holding.currentPrice !== null ? holding.currentPrice : holding.buyPrice;
+  const nativeSaleValue = nativeSalePrice * holding.quantity;
+  const nativeCost = holding.buyPrice * holding.quantity;
+
+  // Convert to portfolio currency for cash and P/L
+  const saleValue = convertAmount(nativeSaleValue, priceCurrency, portfolioCurrency, fxRate);
+  const costInPortfolioCurrency = convertAmount(nativeCost, priceCurrency, portfolioCurrency, fxRate);
+  const profit = saleValue - costInPortfolioCurrency;
 
   await db.$transaction([
     db.holding.delete({ where: { id } }),
@@ -39,6 +48,7 @@ export async function DELETE(
     }),
   ]);
 
-  const message = `Sold ${holding.code} for $${saleValue.toFixed(2)}. Realized P/L: ${profit >= 0 ? "+" : ""}$${profit.toFixed(2)}.`;
+  const cur = portfolioCurrency.toUpperCase();
+  const message = `Sold ${holding.code} for ${cur} ${saleValue.toFixed(2)}. Realized P/L: ${profit >= 0 ? "+" : ""}${cur} ${profit.toFixed(2)}.`;
   return NextResponse.json({ message });
 }

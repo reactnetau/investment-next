@@ -1,10 +1,8 @@
 "use client";
 
 import type { Holding } from "@prisma/client";
-
-function fmt(n: number) {
-  return `$${n.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
+import { formatMoney, convertAmount } from "@/lib/currency";
+import type { Currency } from "@/lib/currency";
 
 function fmtQty(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(4).replace(/\.?0+$/, "");
@@ -15,23 +13,35 @@ function colorClass(n: number) {
   return n > 0 ? "text-good font-semibold" : "text-bad font-semibold";
 }
 
+type HoldingWithCurrency = Holding & { priceCurrency?: string };
+
 interface Props {
-  holding: Holding;
+  holding: HoldingWithCurrency;
   onConfirm: () => void;
   onClose: () => void;
   selling: boolean;
+  currency: Currency;
+  fxRate: number;
 }
 
-export function SellModal({ holding, onConfirm, onClose, selling }: Props) {
-  const currentPrice = holding.currentPrice ?? holding.buyPrice;
-  const saleValue = currentPrice * holding.quantity;
-  const invested = holding.buyPrice * holding.quantity;
+export function SellModal({ holding, onConfirm, onClose, selling, currency, fxRate }: Props) {
+  const fmt = (n: number) => formatMoney(n, currency);
+  const pc = (holding.priceCurrency ?? "aud") as Currency;
+
+  const nativePrice = holding.currentPrice ?? holding.buyPrice;
+  const displayPrice = convertAmount(nativePrice, pc, currency, fxRate);
+  const displayBuy = convertAmount(holding.buyPrice, pc, currency, fxRate);
+
+  const saleValue = displayPrice * holding.quantity;
+  const invested = displayBuy * holding.quantity;
   const pl = saleValue - invested;
-  const pct = holding.buyPrice > 0 ? ((currentPrice - holding.buyPrice) / holding.buyPrice) * 100 : 0;
+  const pct = displayBuy > 0 ? ((displayPrice - displayBuy) / displayBuy) * 100 : 0;
   const daysHeld = Math.max(
     0,
     Math.floor((Date.now() - new Date(holding.purchasedOn).getTime()) / (1000 * 60 * 60 * 24))
   );
+
+  const showNativeCurrency = pc !== currency;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -42,14 +52,19 @@ export function SellModal({ holding, onConfirm, onClose, selling }: Props) {
         style={{ boxShadow: "var(--shadow)" }}
       >
         <h2 className="text-lg font-bold text-ink mb-1">Sell {holding.code}</h2>
-        <p className="text-sm text-muted mb-5">Review your trade before confirming.</p>
+        <p className="text-sm text-muted mb-5">
+          Review your trade before confirming.
+          {showNativeCurrency && (
+            <span className="ml-1">Prices converted from {pc.toUpperCase()} to {currency.toUpperCase()}.</span>
+          )}
+        </p>
 
         <div className="rounded-xl border border-line bg-[#faf7f2] divide-y divide-line text-sm mb-5">
           <Row label="Quantity" value={fmtQty(holding.quantity)} />
-          <Row label="Buy Price" value={fmt(holding.buyPrice)} />
+          <Row label="Buy Price" value={fmt(displayBuy)} />
           <Row
             label="Current Price"
-            value={holding.currentPrice !== null ? fmt(holding.currentPrice) : `${fmt(holding.buyPrice)} (no live price)`}
+            value={holding.currentPrice !== null ? fmt(displayPrice) : `${fmt(displayBuy)} (no live price)`}
           />
           <Row label="Days Held" value={String(daysHeld)} />
           <Row label="Amount Invested" value={fmt(invested)} />

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCachedPrice } from "@/lib/price";
+import { getCachedPrice, getAudUsdRate } from "@/lib/price";
 import { getSession, getUserId } from "@/lib/session";
 
 /** GET /api/portfolio — fetch current portfolio for the signed-in user */
@@ -20,9 +20,12 @@ export async function GET() {
       db.user.findUnique({ where: { id: userId }, select: { plan: true } }),
     ]);
 
-    // Attach price cache timestamps to each holding
+    // Attach price cache timestamps and FX rate
     const codes = [...new Set(portfolio.holdings.map((h) => h.code))];
-    const prices = await db.price.findMany({ where: { code: { in: codes } } });
+    const [prices, fxRate] = await Promise.all([
+      db.price.findMany({ where: { code: { in: codes } } }),
+      getAudUsdRate(),
+    ]);
     const priceMap = Object.fromEntries(prices.map((p) => [p.code, p.updatedAt]));
 
     const holdingsWithAge = portfolio.holdings.map((h) => ({
@@ -42,6 +45,8 @@ export async function GET() {
       ...portfolio,
       holdings: holdingsWithAge,
       plan: user?.plan ?? "free",
+      currency: portfolio.currency ?? "aud",
+      fxRate,
       nextPriceRefresh,
     });
   } catch (e) {

@@ -13,9 +13,16 @@ import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { ChangePasswordModal } from "@/components/ChangePasswordModal";
 import { SellModal } from "@/components/SellModal";
 import { FREE_HOLDING_LIMIT } from "@/lib/plans";
+import { formatMoney } from "@/lib/currency";
 import { PriceCountdown } from "@/components/PriceCountdown";
 
-type PortfolioWithHoldings = Portfolio & { holdings: HoldingWithAge[]; plan: string; nextPriceRefresh: string | null };
+type PortfolioWithHoldings = Portfolio & {
+  holdings: HoldingWithAge[];
+  plan: string;
+  currency: string;
+  fxRate: number;
+  nextPriceRefresh: string | null;
+};
 
 export default function DashboardPage() {
   return (
@@ -172,6 +179,8 @@ function Dashboard() {
           onConfirm={confirmSell}
           onClose={() => setSellTarget(null)}
           selling={selling === sellTarget.id}
+          currency={(portfolio.currency ?? "aud") as "aud" | "usd"}
+          fxRate={portfolio.fxRate ?? 0.65}
         />
       )}
 
@@ -230,7 +239,11 @@ function Dashboard() {
       </div>
 
       {/* Stats cards */}
-      <PortfolioStats portfolio={portfolio} />
+      <PortfolioStats
+        portfolio={portfolio}
+        currency={(portfolio.currency ?? "aud") as "aud" | "usd"}
+        fxRate={portfolio.fxRate ?? 0.65}
+      />
 
       {/* Main layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-4">
@@ -267,8 +280,8 @@ function Dashboard() {
           </div>
 
           <p className="mt-4 text-xs text-muted leading-relaxed">
-            Starting cash is $10,000.00. Enter an ASX code (e.g. BHP) or NASDAQ/NYSE code (e.g. META, AAPL).
-            Leave the buy-in price blank to use the live price. Enter either a quantity or an AUD amount.
+            Starting cash is {formatMoney(10000, (portfolio.currency ?? "aud") as "aud" | "usd")}. Enter an ASX code (e.g. BHP) or NASDAQ/NYSE code (e.g. META, AAPL).
+            Leave the buy-in price blank to use the live price. All values shown in {(portfolio.currency ?? "AUD").toUpperCase()}.
             {isFree && (
               <span className="block mt-1">Free accounts can hold up to {FREE_HOLDING_LIMIT} stocks. <button onClick={handleUpgrade} className="text-accent underline">Upgrade to Pro</button> for unlimited.</span>
             )}
@@ -293,6 +306,8 @@ function Dashboard() {
             holdings={portfolio.holdings}
             onSell={(holding) => setSellTarget(holding)}
             selling={selling}
+            currency={(portfolio.currency ?? "aud") as "aud" | "usd"}
+            fxRate={portfolio.fxRate ?? 0.65}
           />
         </div>
       </div>

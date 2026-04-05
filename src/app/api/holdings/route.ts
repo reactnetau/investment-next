@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCachedPrice } from "@/lib/price";
+import { getCachedPrice, getAudUsdRate } from "@/lib/price";
+import { convertAmount } from "@/lib/currency";
 import { getSession, getUserId } from "@/lib/session";
 import { FREE_HOLDING_LIMIT } from "@/lib/plans";
 
@@ -22,8 +23,10 @@ export async function POST(req: NextRequest) {
 
   const normalizedCode = code.trim().toUpperCase();
 
-  // Get price from cache (falls back to Yahoo and saves to cache if not found)
-  const livePrice = await getCachedPrice(normalizedCode);
+  // Get price from cache (native currency)
+  const priceResult = await getCachedPrice(normalizedCode);
+  const livePrice = priceResult?.price ?? null;
+  const priceCurrency = priceResult?.currency ?? "aud";
 
   let buyPriceNum: number;
   let usedLive = false;
@@ -45,26 +48,14 @@ export async function POST(req: NextRequest) {
   }
 
   let quantityNum: number;
-  if (amountAud) {
-    const amount = parseFloat(String(amountAud).replace(/,/g, ""));
-    if (isNaN(amount) || amount <= 0) {
-      return NextResponse.json({ error: "Amount (AUD) must be greater than zero." }, { status: 400 });
-    }
-    quantityNum = amount / buyPriceNum;
-  } else {
-    quantityNum = parseFloat(String(quantity).replace(/,/g, ""));
-    if (isNaN(quantityNum) || quantityNum <= 0) {
-      return NextResponse.json({ error: "Quantity must be greater than zero." }, { status: 400 });
-    }
-  }
-
-  const cost = buyPriceNum * quantityNum;
 
   const portfolio = await db.portfolio.findUnique({
     where: { userId },
     include: { _count: { select: { holdings: true } } },
   });
   if (!portfolio) return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
+
+  const portfolioCurrency = portfolio.currency as "aud" | "usd";
 
   // Enforce free tier holding limit
   const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
@@ -75,9 +66,31 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (moneyToCents(cost) > moneyToCents(portfolio.cash)) {
+  if (amountAud) {
+    // amountAud is entered in portfolio currency
+    const amount = parseFloat(String(amountAud).replace(/,/g, ""));
+    if (isNaN(amount) || amount <= 0) {
+      return NextResponse.json({ error: "Amount must be greater than zero." }, { status: 400 });
+    }
+    // Convert amount to native currency to calculate quantity
+    const fxRate = await getAudUsdRate();
+    const amountInNative = convertAmount(amount, portfolioCurrency, priceCurrency, fxRate);
+    quantityNum = amountInNative / buyPriceNum;
+  } else {
+    quantityNum = parseFloat(String(quantity).replace(/,/g, ""));
+    if (isNaN(quantityNum) || quantityNum <= 0) {
+      return NextResponse.json({ error: "Quantity must be greater than zero." }, { status: 400 });
+    }
+  }
+
+  // Cost in native currency → convert to portfolio currency for cash deduction
+  const costNative = buyPriceNum * quantityNum;
+  const fxRate = await getAudUsdRate();
+  const costInPortfolioCurrency = convertAmount(costNative, priceCurrency, portfolioCurrency, fxRate);
+
+  if (moneyToCents(costInPortfolioCurrency) > moneyToCents(portfolio.cash)) {
     return NextResponse.json(
-      { error: `Not enough cash. You have $${portfolio.cash.toFixed(2)} available.` },
+      { error: `Not enough cash. You have ${portfolioCurrency.toUpperCase()} ${portfolio.cash.toFixed(2)} available.` },
       { status: 422 }
     );
   }
@@ -92,6 +105,7 @@ export async function POST(req: NextRequest) {
         buyPrice: buyPriceNum,
         quantity: quantityNum,
         currentPrice,
+        priceCurrency,
         purchasedOn: new Date(),
         volatility: Math.random() * (0.05 - 0.01) + 0.01,
         momentumBias: Math.random() * (0.004 - -0.004) + -0.004,
@@ -99,13 +113,14 @@ export async function POST(req: NextRequest) {
     }),
     db.portfolio.update({
       where: { id: portfolio.id },
-      data: { cash: (moneyToCents(portfolio.cash) - moneyToCents(cost)) / 100 },
+      data: { cash: (moneyToCents(portfolio.cash) - moneyToCents(costInPortfolioCurrency)) / 100 },
     }),
   ]);
 
+  const currencyLabel = priceCurrency.toUpperCase();
   const message = usedLive
-    ? `Bought ${quantityNum.toFixed(4)} shares of ${normalizedCode} at $${buyPriceNum.toFixed(2)} (live price).`
-    : `Bought ${quantityNum.toFixed(4)} shares of ${normalizedCode} at $${buyPriceNum.toFixed(2)}.`;
+    ? `Bought ${quantityNum.toFixed(4)} shares of ${normalizedCode} at ${currencyLabel} ${buyPriceNum.toFixed(2)} (live price).`
+    : `Bought ${quantityNum.toFixed(4)} shares of ${normalizedCode} at ${currencyLabel} ${buyPriceNum.toFixed(2)}.`;
 
   return NextResponse.json({ holding, message }, { status: 201 });
 }

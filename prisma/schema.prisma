@@ -30,6 +30,7 @@ model Portfolio {
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   cash         Float     @default(10000)
   startingCash Float     @default(10000)
+  currency     String    @default("aud")
   currentDay   DateTime  @default(now())
   holdings     Holding[]
   createdAt    DateTime  @default(now())
@@ -39,19 +40,21 @@ model Portfolio {
 model Price {
   code      String   @id
   price     Float
+  currency  String   @default("aud")
   updatedAt DateTime @updatedAt
 }
 
 model Holding {
-  id           String    @id @default(cuid())
-  portfolioId  String
-  portfolio    Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
-  code         String
-  buyPrice     Float
-  quantity     Float
-  currentPrice Float?
-  purchasedOn  DateTime
-  volatility   Float
-  momentumBias Float
-  createdAt    DateTime  @default(now())
+  id            String    @id @default(cuid())
+  portfolioId   String
+  portfolio     Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  code          String
+  buyPrice      Float
+  quantity      Float
+  currentPrice  Float?
+  priceCurrency String    @default("aud")
+  purchasedOn   DateTime
+  volatility    Float
+  momentumBias  Float
+  createdAt     DateTime  @default(now())
 }
