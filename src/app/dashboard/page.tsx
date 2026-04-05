@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, Suspense } from "react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Portfolio, Holding } from "@prisma/client";
 
@@ -113,6 +113,18 @@ function Dashboard() {
     if (res.ok) loadPortfolio();
   }
 
+  async function handleDeleteAccount() {
+    if (!confirm("Delete your account permanently? This will remove your portfolio and cannot be undone.")) return;
+
+    const res = await fetch("/api/account", { method: "DELETE" });
+    const data = await res.json();
+    setStatusMsg(data.message ?? data.error ?? "Something went wrong.");
+
+    if (res.ok) {
+      await signOut({ callbackUrl: "/login" });
+    }
+  }
+
   function getUserLocale(): string {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
     if (tz.startsWith("America/")) return "usd";
@@ -186,6 +198,7 @@ function Dashboard() {
           <HamburgerMenu
             onChangePassword={() => setShowChangePassword(true)}
             onCancelSubscription={handleCancelSubscription}
+            onDeleteAccount={handleDeleteAccount}
             onUpgrade={handleUpgrade}
             plan={portfolio.plan}
           />
