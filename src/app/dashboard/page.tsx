@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Portfolio, Holding } from "@prisma/client";
@@ -15,6 +15,14 @@ import { FREE_HOLDING_LIMIT } from "@/lib/stripe";
 type PortfolioWithHoldings = Portfolio & { holdings: Holding[]; plan: string };
 
 export default function DashboardPage() {
+  return (
+    <Suspense>
+      <Dashboard />
+    </Suspense>
+  );
+}
+
+function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
