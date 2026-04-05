@@ -22,7 +22,7 @@ function colorClass(n: number) {
 
 interface Props {
   holdings: Holding[];
-  onSell: (id: string) => void;
+  onSell: (holding: Holding) => void;
   selling: string | null;
 }
 
@@ -88,7 +88,7 @@ export function HoldingsTable({ holdings, onSell, selling }: Props) {
                 <td className={`px-3 py-3 text-center ${colorClass(pl)}`}>{fmt(pl)}</td>
                 <td className="px-3 py-3 text-center">
                   <button
-                    onClick={() => onSell(h.id)}
+                    onClick={() => onSell(h)}
                     disabled={selling === h.id}
                     className="rounded-[10px] bg-danger text-white text-xs font-bold px-3 py-2 hover:opacity-90 disabled:opacity-50 transition"
                   >

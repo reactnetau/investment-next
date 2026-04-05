@@ -9,6 +9,7 @@ import { HoldingsTable } from "@/components/HoldingsTable";
 import { AddHoldingForm } from "@/components/AddHoldingForm";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { ChangePasswordModal } from "@/components/ChangePasswordModal";
+import { SellModal } from "@/components/SellModal";
 
 type PortfolioWithHoldings = Portfolio & { holdings: Holding[] };
 
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const [statusMsg, setStatusMsg] = useState("Loading portfolio…");
   const [refreshing, setRefreshing] = useState(false);
   const [selling, setSelling] = useState<string | null>(null);
+  const [sellTarget, setSellTarget] = useState<Holding | null>(null);
   const [resetting, setResetting] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
 
@@ -60,10 +62,13 @@ export default function DashboardPage() {
     setStatusMsg(`Refreshed live prices for ${data.holdings.length} holding(s).`);
   }
 
-  async function handleSell(id: string) {
+  async function confirmSell() {
+    if (!sellTarget) return;
+    const id = sellTarget.id;
     setSelling(id);
     const res = await fetch(`/api/holdings/${id}`, { method: "DELETE" });
     setSelling(null);
+    setSellTarget(null);
     if (!res.ok) {
       const data = await res.json();
       setStatusMsg(data.error ?? "Failed to sell.");
@@ -97,12 +102,19 @@ export default function DashboardPage() {
     );
   }
 
-  const simDate = new Date(portfolio.currentDay).toISOString().slice(0, 10);
-
   return (
     <div className="w-full min-h-screen px-5 py-7 pb-12">
       {showChangePassword && (
         <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
+      )}
+
+      {sellTarget && (
+        <SellModal
+          holding={sellTarget}
+          onConfirm={confirmSell}
+          onClose={() => setSellTarget(null)}
+          selling={selling === sellTarget.id}
+        />
       )}
 
       {/* Header */}
@@ -116,11 +128,6 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0 pt-1">
-          <div className="text-right text-sm text-muted">
-            Signed in as <strong className="text-ink">{session?.user?.email}</strong>
-            <br />
-            Simulation date: <strong className="text-ink">{simDate}</strong>
-          </div>
           <HamburgerMenu onChangePassword={() => setShowChangePassword(true)} />
         </div>
       </div>
@@ -184,7 +191,7 @@ export default function DashboardPage() {
           <h2 className="text-base font-bold text-ink mb-4">Portfolio</h2>
           <HoldingsTable
             holdings={portfolio.holdings}
-            onSell={handleSell}
+            onSell={(holding) => setSellTarget(holding)}
             selling={selling}
           />
         </div>
