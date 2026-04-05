@@ -10,7 +10,7 @@ import { AddHoldingForm } from "@/components/AddHoldingForm";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { ChangePasswordModal } from "@/components/ChangePasswordModal";
 import { SellModal } from "@/components/SellModal";
-import { FREE_HOLDING_LIMIT } from "@/lib/stripe";
+import { FREE_HOLDING_LIMIT } from "@/lib/plans";
 
 type PortfolioWithHoldings = Portfolio & { holdings: Holding[]; plan: string };
 

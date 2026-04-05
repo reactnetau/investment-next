@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { fetchLivePrice } from "@/lib/price";
 import { getSession, getUserId } from "@/lib/session";
-import { FREE_HOLDING_LIMIT } from "@/lib/stripe";
+import { FREE_HOLDING_LIMIT } from "@/lib/plans";
 
 function moneyToCents(value: number): number {
   return Math.round(value * 100);
