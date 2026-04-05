@@ -39,7 +39,6 @@ function Dashboard() {
 
   const [portfolio, setPortfolio] = useState<PortfolioWithHoldings | null>(null);
   const [statusMsg, setStatusMsg] = useState("Loading portfolio…");
-  const [refreshing, setRefreshing] = useState(false);
   const [selling, setSelling] = useState<string | null>(null);
   const [sellTarget, setSellTarget] = useState<Holding | null>(null);
   const [resetting, setResetting] = useState(false);
@@ -73,24 +72,6 @@ function Dashboard() {
       });
     }
   }, [status, loadPortfolio, session, searchParams, router]);
-
-  async function handleRefreshPrices() {
-    setRefreshing(true);
-    setStatusMsg("Refreshing live prices…");
-    const res = await fetch("/api/portfolio", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "refresh_prices" }),
-    });
-    setRefreshing(false);
-    if (!res.ok) {
-      setStatusMsg("Could not refresh prices right now.");
-      return;
-    }
-    const data = await res.json();
-    setPortfolio(data);
-    setStatusMsg(`Refreshed live prices for ${data.holdings.length} holding(s).`);
-  }
 
   async function confirmSell() {
     if (!sellTarget) return;
@@ -263,13 +244,6 @@ function Dashboard() {
           <h2 className="text-base font-bold text-ink mt-6 mb-3">Portfolio Actions</h2>
 
           <div className="flex flex-col gap-2">
-            <button
-              onClick={handleRefreshPrices}
-              disabled={refreshing}
-              className="rounded-xl bg-[#d8a23d] text-[#2e2416] font-bold py-3 text-sm hover:opacity-90 disabled:opacity-60 transition"
-            >
-              {refreshing ? "Refreshing…" : "Refresh Live Prices"}
-            </button>
             <button
               onClick={handleReset}
               disabled={resetting}
