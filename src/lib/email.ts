@@ -3,6 +3,22 @@ import { Resend } from "resend";
 const FROM = process.env.EMAIL_FROM ?? "Investment Simulator <noreply@resend.dev>";
 const APP_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
+export async function sendNewProSubscriberEmail(customerEmail: string) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) return;
+
+  await resend.emails.send({
+    from: FROM,
+    to: adminEmail,
+    subject: "New Pro subscriber — Investment Simulator",
+    html: `
+      <p>Someone just upgraded to Pro!</p>
+      <p><strong>Email:</strong> ${customerEmail}</p>
+    `,
+  });
+}
+
 export async function sendPasswordResetEmail(email: string, token: string) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const resetUrl = `${APP_URL}/reset-password?token=${token}`;

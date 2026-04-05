@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
+import { sendNewProSubscriberEmail } from "@/lib/email";
 import type Stripe from "stripe";
 
 // Required so Next.js doesn't parse the body — Stripe needs the raw bytes to verify the signature
@@ -24,10 +25,15 @@ export async function POST(req: NextRequest) {
     const customerId = session.customer as string;
     const subscriptionId = session.subscription as string;
 
-    await db.user.updateMany({
+    const updated = await db.user.updateMany({
       where: { stripeCustomerId: customerId },
       data: { plan: "pro", stripeSubscriptionId: subscriptionId },
     });
+
+    if (updated.count > 0) {
+      const user = await db.user.findFirst({ where: { stripeCustomerId: customerId } });
+      if (user) await sendNewProSubscriberEmail(user.email);
+    }
   }
 
   if (
