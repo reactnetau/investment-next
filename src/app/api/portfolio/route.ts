@@ -86,11 +86,11 @@ export async function PATCH(req: NextRequest) {
 
     await Promise.all(
       portfolio.holdings.map(async (h) => {
-        const price = await getCachedPrice(h.code);
-        if (price !== null && price > 0) {
+        const result = await getCachedPrice(h.code);
+        if (result !== null && result.price > 0) {
           await db.holding.update({
             where: { id: h.id },
-            data: { currentPrice: price },
+            data: { currentPrice: result.price, priceCurrency: result.currency },
           });
         }
       })
