@@ -109,20 +109,22 @@ export function AddHoldingForm({ onAdded, onStatus }: Props) {
       <label className="flex flex-col gap-1 text-sm text-muted">
         Quantity
         <input
-          className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
+          className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-40 disabled:cursor-not-allowed"
           placeholder="10"
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
+          disabled={!!amountAud}
         />
       </label>
 
       <label className="flex flex-col gap-1 text-sm text-muted">
         Amount (AUD)
         <input
-          className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
+          className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-40 disabled:cursor-not-allowed"
           placeholder="500"
           value={amountAud}
           onChange={(e) => setAmountAud(e.target.value)}
+          disabled={!!quantity}
         />
       </label>
 
