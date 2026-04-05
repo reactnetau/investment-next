@@ -88,8 +88,8 @@ function Dashboard() {
       return;
     }
     const data = await res.json();
+    setPortfolio(data);
     setStatusMsg(`Refreshed live prices for ${data.holdings.length} holding(s).`);
-    loadPortfolio();
   }
 
   async function confirmSell() {

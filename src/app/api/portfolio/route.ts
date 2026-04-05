@@ -104,11 +104,30 @@ export async function PATCH(req: NextRequest) {
       })
     );
 
-    const updated = await db.portfolio.findUnique({
-      where: { userId },
-      include: { holdings: { orderBy: { createdAt: "asc" } } },
+    // Return full enriched response (same shape as GET)
+    const [updated, user, fxRate] = await Promise.all([
+      db.portfolio.findUnique({ where: { userId }, include: { holdings: { orderBy: { createdAt: "asc" } } } }),
+      db.user.findUnique({ where: { id: userId }, select: { plan: true } }),
+      getAudUsdRate(),
+    ]);
+    if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    const codes = [...new Set(updated.holdings.map((h) => h.code))];
+    const prices = await db.price.findMany({ where: { code: { in: codes } } });
+    const priceMap = Object.fromEntries(prices.map((p) => [p.code, p.updatedAt]));
+    const holdingsWithAge = updated.holdings.map((h) => ({ ...h, priceUpdatedAt: priceMap[h.code] ?? null }));
+
+    const mostRecentUpdate = prices.reduce<Date | null>((latest, p) => (!latest || p.updatedAt > latest ? p.updatedAt : latest), null);
+    const nextPriceRefresh = mostRecentUpdate ? new Date(mostRecentUpdate.getTime() + 2 * 60 * 60 * 1000) : null;
+
+    return NextResponse.json({
+      ...updated,
+      holdings: holdingsWithAge,
+      plan: user?.plan ?? "free",
+      currency: updated.currency ?? "aud",
+      fxRate,
+      nextPriceRefresh,
     });
-    return NextResponse.json(updated);
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });
