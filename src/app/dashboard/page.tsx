@@ -186,6 +186,7 @@ function Dashboard() {
           <HamburgerMenu
             onChangePassword={() => setShowChangePassword(true)}
             onCancelSubscription={handleCancelSubscription}
+            onUpgrade={handleUpgrade}
             plan={portfolio.plan}
           />
         </div>
