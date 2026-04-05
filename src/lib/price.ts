@@ -26,7 +26,10 @@ export async function fetchLivePrice(code: string): Promise<number | null> {
       },
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`fetchLivePrice: Yahoo returned ${res.status} for ${symbol}`);
+      return null;
+    }
 
     const data = await res.json();
     const meta = data?.chart?.result?.[0]?.meta;
