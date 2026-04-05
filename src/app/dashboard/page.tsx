@@ -125,9 +125,19 @@ function Dashboard() {
     if (res.ok) loadPortfolio();
   }
 
+  function getUserLocale(): string {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
+    if (tz.startsWith("America/")) return "usd";
+    return "aud";
+  }
+
   async function handleUpgrade() {
     setUpgrading(true);
-    const res = await fetch("/api/stripe/checkout", { method: "POST" });
+    const res = await fetch("/api/stripe/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ locale: getUserLocale() }),
+    });
     if (!res.ok) {
       setUpgrading(false);
       setStatusMsg("Could not start checkout. Try again.");
@@ -136,6 +146,8 @@ function Dashboard() {
     const { url } = await res.json();
     window.location.href = url;
   }
+
+  const priceLabel = getUserLocale() === "usd" ? "$1.99 USD" : "$2.99 AUD";
 
   if (status === "loading" || !portfolio) {
     return (
@@ -204,7 +216,7 @@ function Dashboard() {
             disabled={upgrading}
             className="shrink-0 rounded-xl bg-[#d8a23d] text-[#2e2416] font-bold px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60 transition"
           >
-            {upgrading ? "Redirecting…" : "Upgrade to Pro — $5/mo"}
+            {upgrading ? "Redirecting…" : `Upgrade to Pro — ${priceLabel}/mo`}
           </button>
         </div>
       )}

@@ -3,7 +3,15 @@ import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
 import { getSession, getUserId } from "@/lib/session";
 
-export async function POST() {
+const PRICES: Record<string, { currency: string; amount: number; label: string }> = {
+  usd: { currency: "usd", amount: 199, label: "$1.99 USD" }, // ~$2.99 AUD
+  aud: { currency: "aud", amount: 299, label: "$2.99 AUD" },
+};
+
+export async function POST(req: Request) {
+  const body = await req.json().catch(() => ({}));
+  const locale = (body.locale as string) ?? "aud";
+  const pricing = PRICES[locale] ?? PRICES.aud;
   const session = await getSession();
   const userId = getUserId(session);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -27,9 +35,9 @@ export async function POST() {
     line_items: [
       {
         price_data: {
-          currency: "aud",
+          currency: pricing.currency,
           product_data: { name: "Investment Simulator Pro" },
-          unit_amount: 500, // $5.00 AUD in cents
+          unit_amount: pricing.amount,
           recurring: { interval: "month" },
         },
         quantity: 1,
@@ -39,5 +47,5 @@ export async function POST() {
     cancel_url: `${appUrl}/dashboard?upgrade=cancelled`,
   });
 
-  return NextResponse.json({ url: checkoutSession.url });
+  return NextResponse.json({ url: checkoutSession.url, priceLabel: pricing.label });
 }
