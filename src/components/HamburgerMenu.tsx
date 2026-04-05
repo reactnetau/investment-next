@@ -5,9 +5,11 @@ import { signOut } from "next-auth/react";
 
 interface Props {
   onChangePassword: () => void;
+  onCancelSubscription: () => void;
+  plan: string;
 }
 
-export function HamburgerMenu({ onChangePassword }: Props) {
+export function HamburgerMenu({ onChangePassword, onCancelSubscription, plan }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -44,6 +46,17 @@ export function HamburgerMenu({ onChangePassword }: Props) {
           >
             Change Password
           </button>
+          {plan === "pro" && (
+            <>
+              <div className="border-t border-line" />
+              <button
+                onClick={() => { setOpen(false); onCancelSubscription(); }}
+                className="w-full text-left px-4 py-3 text-sm text-muted hover:bg-[#f0ece3] transition"
+              >
+                Cancel Subscription
+              </button>
+            </>
+          )}
           <div className="border-t border-line" />
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}

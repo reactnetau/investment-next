@@ -35,6 +35,7 @@ function Dashboard() {
   const [resetting, setResetting] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -114,6 +115,16 @@ function Dashboard() {
     setStatusMsg("Portfolio reset. Starting cash: $10,000.00.");
   }
 
+  async function handleCancelSubscription() {
+    if (!confirm("Cancel your Pro subscription? You'll keep access until the end of your billing period.")) return;
+    setCancelling(true);
+    const res = await fetch("/api/stripe/cancel", { method: "POST" });
+    setCancelling(false);
+    const data = await res.json();
+    setStatusMsg(data.message ?? data.error ?? "Something went wrong.");
+    if (res.ok) loadPortfolio();
+  }
+
   async function handleUpgrade() {
     setUpgrading(true);
     const res = await fetch("/api/stripe/checkout", { method: "POST" });
@@ -155,15 +166,26 @@ function Dashboard() {
       {/* Header */}
       <div className="flex justify-between items-start gap-4 mb-5">
         <div>
-          <h1 className="text-[2.1rem] font-bold text-ink tracking-wide leading-tight">
-            Investment Simulator
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-[2.1rem] font-bold text-ink tracking-wide leading-tight">
+              Investment Simulator
+            </h1>
+            {portfolio.plan === "pro" && (
+              <span className="rounded-lg bg-[#d8a23d] text-[#2e2416] text-xs font-bold px-2.5 py-1 tracking-wide">
+                PRO
+              </span>
+            )}
+          </div>
           <div className="text-muted text-sm mt-1">
             Add stocks, refresh live prices from the internet, and track your total portfolio change. Supports ASX and NASDAQ.
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0 pt-1">
-          <HamburgerMenu onChangePassword={() => setShowChangePassword(true)} />
+          <HamburgerMenu
+            onChangePassword={() => setShowChangePassword(true)}
+            onCancelSubscription={handleCancelSubscription}
+            plan={portfolio.plan}
+          />
         </div>
       </div>
 
