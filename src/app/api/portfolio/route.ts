@@ -99,8 +99,8 @@ export async function PATCH(req: NextRequest) {
           await Promise.all([
             db.price.upsert({
               where: { code: h.code },
-              update: { price: result.price, currency: result.currency },
-              create: { code: h.code, price: result.price, currency: result.currency },
+              update: { price: result.price, currency: result.currency, updatedAt: new Date() },
+              create: { code: h.code, price: result.price, currency: result.currency, updatedAt: new Date() },
             }),
             db.holding.update({
               where: { id: h.id },
