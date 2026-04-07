@@ -4,8 +4,8 @@ import { db } from "@/lib/db";
 import { getSession, getUserId } from "@/lib/session";
 
 const PRICES: Record<string, { currency: string; amount: number; label: string }> = {
-  usd: { currency: "usd", amount: 199, label: "$1.99 USD" }, // ~$2.99 AUD
-  aud: { currency: "aud", amount: 299, label: "$2.99 AUD" },
+  usd: { currency: "usd", amount: 300, label: "$3.00 USD" },
+  aud: { currency: "aud", amount: 500, label: "$5.00 AUD" },
 };
 
 export async function POST(req: Request) {
@@ -31,14 +31,13 @@ export async function POST(req: Request) {
 
   const checkoutSession = await stripe.checkout.sessions.create({
     customer: customerId,
-    mode: "subscription",
+    mode: "payment",
     line_items: [
       {
         price_data: {
           currency: pricing.currency,
-          product_data: { name: "Investment Simulator Pro" },
+          product_data: { name: "Investment Simulator Pro (One-Time)" },
           unit_amount: pricing.amount,
-          recurring: { interval: "month" },
         },
         quantity: 1,
       },

@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
   const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
   if (user?.plan === "free" && portfolio._count.holdings >= FREE_HOLDING_LIMIT) {
     return NextResponse.json(
-      { error: "Free accounts are limited to 5 stocks. Upgrade to Pro to add more.", upgrade: true },
+      { error: "Free accounts are limited to 5 stocks. Unlock unlimited with a one-off payment.", upgrade: true },
       { status: 403 }
     );
   }

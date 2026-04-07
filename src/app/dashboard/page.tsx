@@ -166,7 +166,7 @@ function Dashboard() {
     window.location.href = url;
   }
 
-  const priceLabel = getUserLocale() === "usd" ? "$1.99 USD" : "$2.99 AUD";
+  const priceLabel = getUserLocale() === "usd" ? "$3.00 USD" : "$5.00 AUD";
 
   if (status === "loading" || !portfolio) {
     return (
@@ -232,14 +232,14 @@ function Dashboard() {
         >
           <div>
             <span className="text-sm font-bold text-ink">You've reached the free limit of {FREE_HOLDING_LIMIT} stocks.</span>
-            <span className="text-sm text-muted ml-2">Upgrade to Pro to add unlimited stocks.</span>
+            <span className="text-sm text-muted ml-2">Unlock unlimited stocks with a one-off payment.</span>
           </div>
           <button
             onClick={handleUpgrade}
             disabled={upgrading}
             className="shrink-0 rounded-xl bg-[#d8a23d] text-[#2e2416] font-bold px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60 transition"
           >
-            {upgrading ? "Redirecting…" : `Upgrade to Pro — ${priceLabel}/mo`}
+            {upgrading ? "Redirecting…" : `Unlock Pro — One-off ${priceLabel}`}
           </button>
         </div>
       )}
@@ -290,7 +290,7 @@ function Dashboard() {
             Starting cash is {formatMoney(10000, (portfolio.currency ?? "aud") as "aud" | "usd")}. Enter an ASX code (e.g. BHP) or NASDAQ/NYSE code (e.g. META, AAPL).
             Leave the buy-in price blank to use the live price. All values shown in {(portfolio.currency ?? "AUD").toUpperCase()}.
             {isFree && (
-              <span className="block mt-1">Free accounts can hold up to {FREE_HOLDING_LIMIT} stocks. <button onClick={handleUpgrade} className="text-accent underline">Upgrade to Pro</button> for unlimited.</span>
+              <span className="block mt-1">Free accounts can hold up to {FREE_HOLDING_LIMIT} stocks. <button onClick={handleUpgrade} className="text-accent underline">Unlock unlimited with a one-off payment</button>.</span>
             )}
           </p>
         </div>
