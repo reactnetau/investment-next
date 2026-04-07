@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCachedPrice } from "@/lib/price";
+import { fetchLivePrice } from "@/lib/price";
 import { getSession, getUserId } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "code is required" }, { status: 400 });
   }
 
-  const price = await getCachedPrice(code.trim());
+  const price = await fetchLivePrice(code.trim());
   if (price === null) {
     return NextResponse.json({ error: "Could not fetch price" }, { status: 404 });
   }

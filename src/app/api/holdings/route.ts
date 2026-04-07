@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCachedPrice, getAudUsdRate } from "@/lib/price";
+import { fetchLivePrice, getAudUsdRate } from "@/lib/price";
 import { convertAmount } from "@/lib/currency";
 import { getSession, getUserId } from "@/lib/session";
 import { FREE_HOLDING_LIMIT } from "@/lib/plans";
@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
 
   const normalizedCode = code.trim().toUpperCase();
 
-  // Get price from cache (native currency)
-  const priceResult = await getCachedPrice(normalizedCode);
+  // Always fetch live price from Yahoo (native currency)
+  const priceResult = await fetchLivePrice(normalizedCode);
   const livePrice = priceResult?.price ?? null;
   const priceCurrency = priceResult?.currency ?? "aud";
 
