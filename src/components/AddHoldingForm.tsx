@@ -24,20 +24,31 @@ export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) 
     setFetchingPrice(true);
     onStatus(`Fetching live price for ${code.trim().toUpperCase()}…`);
 
-    const res = await fetch(`/api/price?code=${encodeURIComponent(code.trim())}`);
-    setFetchingPrice(false);
-
-    if (!res.ok) {
-      onStatus(`Could not fetch a live price for ${code.trim().toUpperCase()} right now.`);
-      return;
+    try {
+      const res = await fetch(`/api/price?code=${encodeURIComponent(code.trim())}`);
+      const data = await res.json();
+      if (!res.ok) {
+        onStatus(data?.error || `Could not fetch a live price for ${code.trim().toUpperCase()} right now.`);
+        return;
+      }
+      // Always expect { price: { price: number, currency: string } }
+      const priceObj = data.price;
+      const livePrice = priceObj?.price;
+      const currency = priceObj?.currency || "";
+      if (typeof livePrice !== "number" || isNaN(livePrice) || !isFinite(livePrice)) {
+        onStatus(`Could not fetch a valid price for ${code.trim().toUpperCase()}.`);
+        return;
+      }
+      const formatted = parseFloat(livePrice.toFixed(4))
+        .toString()
+        .replace(/\.?0+$/, "");
+      setBuyPrice(formatted);
+      onStatus(`Fetched live price for ${code.trim().toUpperCase()}: ${currency.toUpperCase()} $${livePrice.toFixed(2)}`);
+    } catch (err) {
+      onStatus(`Error fetching price: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setFetchingPrice(false);
     }
-
-    const data = await res.json();
-    const formatted = parseFloat(data.price.toFixed(4))
-      .toString()
-      .replace(/\.?0+$/, "");
-    setBuyPrice(formatted);
-    onStatus(`Fetched live price for ${code.trim().toUpperCase()}: $${data.price.toFixed(2)}`);
   }
 
   async function handleSubmit(e: React.FormEvent) {

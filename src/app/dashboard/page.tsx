@@ -42,6 +42,25 @@ function Dashboard() {
   const [selling, setSelling] = useState<string | null>(null);
   const [sellTarget, setSellTarget] = useState<Holding | null>(null);
   const [resetting, setResetting] = useState(false);
+  const [refreshingPrices, setRefreshingPrices] = useState(false);
+    async function handleRefreshPrices() {
+      setRefreshingPrices(true);
+      setStatusMsg("Refreshing live prices for your holdings…");
+      const res = await fetch("/api/portfolio", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "refresh_prices" }),
+      });
+      setRefreshingPrices(false);
+      if (!res.ok) {
+        const data = await res.json();
+        setStatusMsg(data.error ?? "Failed to refresh prices.");
+        return;
+      }
+      const data = await res.json();
+      setPortfolio(data);
+      setStatusMsg("Live prices updated!");
+    }
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
 
@@ -284,6 +303,14 @@ function Dashboard() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-base font-bold text-ink">Portfolio</h2>
             <div className="flex items-center gap-3">
+              <button
+                onClick={handleRefreshPrices}
+                disabled={refreshingPrices}
+                className="rounded-xl bg-accent text-white font-bold px-4 py-2 text-xs hover:opacity-90 disabled:opacity-60 transition"
+                title="Fetch the latest prices for your holdings from Yahoo Finance"
+              >
+                {refreshingPrices ? "Updating…" : "Update Live Prices"}
+              </button>
               <PriceCountdown nextRefresh={portfolio.nextPriceRefresh} />
               {isFree && (
                 <span className="text-xs text-muted">{portfolio.holdings.length} / {FREE_HOLDING_LIMIT} stocks</span>
