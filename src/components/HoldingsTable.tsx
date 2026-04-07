@@ -50,7 +50,7 @@ export function HoldingsTable({ holdings, onSell, selling, currency, fxRate }: P
       <table className="w-full border-collapse text-sm whitespace-nowrap">
         <thead>
           <tr className="bg-[#efe6d8] text-[#56483b]">
-            {["Code", "Buy Price", "Current Price", "Qty", "% Change", "Days Held", "Invested", "Current Value", "P/L", "Action"].map((h) => (
+            {["Code", "Market", "Buy Price", "Current Price", "Qty", "% Change", "Days Held", "Invested", "Current Value", "P/L", "Action"].map((h) => (
               <th key={h} className="px-3 py-3 text-center text-xs uppercase tracking-wider font-semibold">
                 {h}
               </th>
@@ -72,16 +72,13 @@ export function HoldingsTable({ holdings, onSell, selling, currency, fxRate }: P
             const pct = displayBuy > 0 ? ((displayPrice - displayBuy) / displayBuy) * 100 : 0;
             const daysHeld = Math.max(0, Math.floor((Date.now() - new Date(h.purchasedOn).getTime()) / (1000 * 60 * 60 * 24)));
 
-            // Show currency badge if the stock's native currency differs from portfolio currency
-            const showBadge = pc !== currency;
-
             return (
               <tr key={h.id} className="border-b border-line last:border-b-0 hover:bg-[#f9f5ed] transition-colors">
                 <td className="px-3 py-3 text-center">
                   <div className="font-semibold text-ink">{h.code}</div>
-                  {showBadge && (
-                    <div className="text-[10px] text-muted">{pc.toUpperCase()}</div>
-                  )}
+                </td>
+                <td className="px-3 py-3 text-center text-muted">
+                  {pc === "aud" ? "ASX" : "NASDAQ"}
                 </td>
                 <td className="px-3 py-3 text-center">{fmt(displayBuy)}</td>
                 <td className="px-3 py-3 text-center">

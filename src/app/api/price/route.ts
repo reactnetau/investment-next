@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchLivePrice } from "@/lib/price";
+import { fetchLivePrice, getAudUsdRate } from "@/lib/price";
+import { convertAmount } from "@/lib/currency";
+import { db } from "@/lib/db";
 import { getSession, getUserId } from "@/lib/session";
+import type { Currency } from "@/lib/currency";
 
 export async function GET(req: NextRequest) {
   const session = await getSession();
-  if (!getUserId(session)) {
+  const userId = getUserId(session);
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -13,10 +17,23 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "code is required" }, { status: 400 });
   }
 
-  const price = await fetchLivePrice(code.trim());
+  const [price, portfolio] = await Promise.all([
+    fetchLivePrice(code.trim()),
+    db.portfolio.findUnique({ where: { userId }, select: { currency: true } }),
+  ]);
+
   if (price === null) {
     return NextResponse.json({ error: "Could not fetch price" }, { status: 404 });
   }
 
-  return NextResponse.json({ price });
+  const portfolioCurrency = (portfolio?.currency ?? "aud") as Currency;
+
+  // If stock's native currency differs from portfolio currency, return a converted price for display
+  let convertedPrice: number | null = null;
+  if (price.currency !== portfolioCurrency) {
+    const fxRate = await getAudUsdRate();
+    convertedPrice = convertAmount(price.price, price.currency, portfolioCurrency, fxRate);
+  }
+
+  return NextResponse.json({ price, convertedPrice, portfolioCurrency });
 }

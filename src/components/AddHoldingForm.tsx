@@ -13,6 +13,8 @@ export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) 
   const [buyPrice, setBuyPrice] = useState("");
   const [quantity, setQuantity] = useState("");
   const [amountAud, setAmountAud] = useState("");
+  const [buyPriceCurrency, setBuyPriceCurrency] = useState<string>("");
+  const [exchange, setExchange] = useState<string>("");
   const [fetchingPrice, setFetchingPrice] = useState(false);
   const [adding, setAdding] = useState(false);
 
@@ -31,19 +33,26 @@ export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) 
         onStatus(data?.error || `Could not fetch a live price for ${code.trim().toUpperCase()} right now.`);
         return;
       }
-      // Always expect { price: { price: number, currency: string } }
+      // Always expect { price: { price: number, currency: string }, convertedPrice?: number, portfolioCurrency?: string }
       const priceObj = data.price;
       const livePrice = priceObj?.price;
-      const currency = priceObj?.currency || "";
+      const nativeCurrency: string = priceObj?.currency || "";
       if (typeof livePrice !== "number" || isNaN(livePrice) || !isFinite(livePrice)) {
         onStatus(`Could not fetch a valid price for ${code.trim().toUpperCase()}.`);
         return;
       }
-      const formatted = parseFloat(livePrice.toFixed(4))
+      // If stock is in a different currency to the portfolio, show and use the converted price
+      const convertedPrice: number | null = data.convertedPrice ?? null;
+      const portfolioCurrency: string = data.portfolioCurrency || nativeCurrency;
+      const displayPrice = convertedPrice !== null ? convertedPrice : livePrice;
+      const displayCurrency = convertedPrice !== null ? portfolioCurrency : nativeCurrency;
+      const formatted = parseFloat(displayPrice.toFixed(4))
         .toString()
         .replace(/\.?0+$/, "");
       setBuyPrice(formatted);
-      onStatus(`Fetched live price for ${code.trim().toUpperCase()}: ${currency.toUpperCase()} $${livePrice.toFixed(2)}`);
+      setBuyPriceCurrency(displayCurrency);
+      setExchange(nativeCurrency === "aud" ? "ASX" : "NASDAQ");
+      onStatus(`Fetched live price for ${code.trim().toUpperCase()}: ${displayCurrency.toUpperCase()} $${displayPrice.toFixed(2)}`);
     } catch (err) {
       onStatus(`Error fetching price: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
@@ -62,6 +71,7 @@ export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) 
       body: JSON.stringify({
         code: code.trim(),
         buyPrice: buyPrice || undefined,
+        buyPriceCurrency: buyPriceCurrency || undefined,
         quantity: quantity || undefined,
         amountAud: amountAud || undefined,
       }),
@@ -83,6 +93,8 @@ export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) 
     onStatus(data.message);
     setCode("");
     setBuyPrice("");
+    setBuyPriceCurrency("");
+    setExchange("");
     setQuantity("");
     setAmountAud("");
     onAdded();
@@ -93,7 +105,7 @@ export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) 
       {/* Stock code + fetch price button */}
       <div className="grid grid-cols-[1fr_130px] gap-2 items-end">
         <label className="flex flex-col gap-1 text-sm text-muted">
-          Stock Code
+          Stock Code{exchange ? ` (${exchange})` : ""}
           <input
             className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
             placeholder="BHP"
@@ -113,7 +125,7 @@ export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) 
       </div>
 
       <label className="flex flex-col gap-1 text-sm text-muted">
-        Buy-In Price
+        Buy-In Price{buyPriceCurrency ? ` (${buyPriceCurrency.toUpperCase()})` : ""}
         <input
           className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
           placeholder="12.50 or leave blank for live price"

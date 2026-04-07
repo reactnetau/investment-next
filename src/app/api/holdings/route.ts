@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const userId = getUserId(session);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { code, buyPrice, quantity, amountAud } = await req.json();
+  const { code, quantity, amountAud } = await req.json();
 
   if (!code?.trim()) {
     return NextResponse.json({ error: "Enter a stock code." }, { status: 400 });
@@ -23,29 +23,19 @@ export async function POST(req: NextRequest) {
 
   const normalizedCode = code.trim().toUpperCase();
 
-  // Always fetch live price from Yahoo (native currency)
+  // Always fetch a fresh live price from Yahoo at the moment of purchase
   const priceResult = await fetchLivePrice(normalizedCode);
   const livePrice = priceResult?.price ?? null;
   const priceCurrency = priceResult?.currency ?? "aud";
 
-  let buyPriceNum: number;
-  let usedLive = false;
-
-  if (buyPrice) {
-    buyPriceNum = parseFloat(String(buyPrice).replace(/,/g, ""));
-    if (isNaN(buyPriceNum) || buyPriceNum <= 0) {
-      return NextResponse.json({ error: "Buy-in price must be greater than zero." }, { status: 400 });
-    }
-  } else {
-    if (!livePrice || livePrice <= 0) {
-      return NextResponse.json(
-        { error: "Could not fetch a live buy-in price. Enter one manually." },
-        { status: 422 }
-      );
-    }
-    buyPriceNum = livePrice;
-    usedLive = true;
+  if (!livePrice || livePrice <= 0) {
+    return NextResponse.json(
+      { error: "Could not fetch a live price for this stock. Please try again." },
+      { status: 422 }
+    );
   }
+
+  const buyPriceNum = livePrice;
 
   let quantityNum: number;
 
@@ -95,8 +85,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const currentPrice = usedLive ? buyPriceNum : (livePrice ?? null);
-
   const [holding] = await db.$transaction([
     db.holding.create({
       data: {
@@ -104,7 +92,7 @@ export async function POST(req: NextRequest) {
         code: normalizedCode,
         buyPrice: buyPriceNum,
         quantity: quantityNum,
-        currentPrice,
+        currentPrice: buyPriceNum,
         priceCurrency,
         purchasedOn: new Date(),
         volatility: Math.random() * (0.05 - 0.01) + 0.01,
@@ -117,10 +105,7 @@ export async function POST(req: NextRequest) {
     }),
   ]);
 
-  const currencyLabel = priceCurrency.toUpperCase();
-  const message = usedLive
-    ? `Bought ${quantityNum.toFixed(4)} shares of ${normalizedCode} at ${currencyLabel} ${buyPriceNum.toFixed(2)} (live price).`
-    : `Bought ${quantityNum.toFixed(4)} shares of ${normalizedCode} at ${currencyLabel} ${buyPriceNum.toFixed(2)}.`;
+  const message = `Bought ${quantityNum.toFixed(4)} shares of ${normalizedCode} at ${priceCurrency.toUpperCase()} ${buyPriceNum.toFixed(2)} (live price).`;
 
   return NextResponse.json({ holding, message }, { status: 201 });
 }
