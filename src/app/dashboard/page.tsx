@@ -12,6 +12,8 @@ import { AddHoldingForm } from "@/components/AddHoldingForm";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { ChangePasswordModal } from "@/components/ChangePasswordModal";
 import { SellModal } from "@/components/SellModal";
+import { DeleteAccountModal } from "@/components/DeleteAccountModal";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { FREE_HOLDING_LIMIT } from "@/lib/plans";
 import { formatMoney } from "@/lib/currency";
 import { PriceCountdown } from "@/components/PriceCountdown";
@@ -46,22 +48,31 @@ function Dashboard() {
     async function handleRefreshPrices() {
       setRefreshingPrices(true);
       setStatusMsg("Refreshing live prices for your holdings…");
-      const res = await fetch("/api/portfolio", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "refresh_prices" }),
-      });
-      setRefreshingPrices(false);
-      if (!res.ok) {
+      try {
+        const res = await fetch("/api/portfolio", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "refresh_prices" }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          setStatusMsg(data.error ?? "Failed to refresh prices.");
+          return;
+        }
         const data = await res.json();
-        setStatusMsg(data.error ?? "Failed to refresh prices.");
-        return;
+        setPortfolio(data);
+        setStatusMsg("Live prices updated!");
+      } catch {
+        setStatusMsg("Could not reach the server. Please try again.");
+      } finally {
+        setRefreshingPrices(false);
       }
-      const data = await res.json();
-      setPortfolio(data);
-      setStatusMsg("Live prices updated!");
     }
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showCancelSubConfirm, setShowCancelSubConfirm] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
 
   useEffect(() => {
@@ -77,9 +88,18 @@ function Dashboard() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      loadPortfolio().then(() => {
+      loadPortfolio().then(async () => {
         const upgradeParam = searchParams.get("upgrade");
         if (upgradeParam === "success") {
+          const sessionId = searchParams.get("session_id");
+          if (sessionId) {
+            await fetch("/api/stripe/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ sessionId }),
+            });
+            await loadPortfolio();
+          }
           setStatusMsg("You're now on Pro. Welcome to Investment Simulator Pro!");
           router.replace("/dashboard");
         } else if (upgradeParam === "cancelled") {
@@ -109,8 +129,8 @@ function Dashboard() {
     loadPortfolio();
   }
 
-  async function handleReset() {
-    if (!confirm("Reset your entire portfolio? This cannot be undone.")) return;
+  async function confirmReset() {
+    setShowResetConfirm(false);
     setResetting(true);
     const res = await fetch("/api/portfolio", {
       method: "PATCH",
@@ -124,21 +144,21 @@ function Dashboard() {
     setStatusMsg("Portfolio reset. Starting cash: $10,000.00.");
   }
 
-  async function handleCancelSubscription() {
-    if (!confirm("Cancel your Pro subscription? You'll keep access until the end of your billing period.")) return;
+  async function confirmCancelSubscription() {
+    setShowCancelSubConfirm(false);
     const res = await fetch("/api/stripe/cancel", { method: "POST" });
     const data = await res.json();
     setStatusMsg(data.message ?? data.error ?? "Something went wrong.");
     if (res.ok) loadPortfolio();
   }
 
-  async function handleDeleteAccount() {
-    if (!confirm("Delete your account permanently? This will remove your portfolio and cannot be undone.")) return;
-
+  async function confirmDeleteAccount() {
+    setDeletingAccount(true);
     const res = await fetch("/api/account", { method: "DELETE" });
     const data = await res.json();
+    setDeletingAccount(false);
+    setShowDeleteAccount(false);
     setStatusMsg(data.message ?? data.error ?? "Something went wrong.");
-
     if (res.ok) {
       await signOut({ callbackUrl: "/login" });
     }
@@ -185,6 +205,37 @@ function Dashboard() {
         <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
       )}
 
+      {showDeleteAccount && (
+        <DeleteAccountModal
+          onConfirm={confirmDeleteAccount}
+          onClose={() => setShowDeleteAccount(false)}
+          deleting={deletingAccount}
+          isPro={portfolio?.plan === "pro"}
+        />
+      )}
+
+      {showResetConfirm && (
+        <ConfirmModal
+          title="Reset Portfolio"
+          message="Reset your entire portfolio? This cannot be undone."
+          confirmLabel="Reset"
+          danger
+          loading={resetting}
+          onConfirm={confirmReset}
+          onClose={() => setShowResetConfirm(false)}
+        />
+      )}
+
+      {showCancelSubConfirm && (
+        <ConfirmModal
+          title="Cancel Subscription"
+          message="Cancel your Pro subscription? You'll keep access until the end of your billing period."
+          confirmLabel="Cancel Subscription"
+          onConfirm={confirmCancelSubscription}
+          onClose={() => setShowCancelSubConfirm(false)}
+        />
+      )}
+
       {sellTarget && (
         <SellModal
           holding={sellTarget}
@@ -216,8 +267,7 @@ function Dashboard() {
         <div className="flex items-center gap-3 shrink-0 pt-1">
           <HamburgerMenu
             onChangePassword={() => setShowChangePassword(true)}
-            onCancelSubscription={handleCancelSubscription}
-            onDeleteAccount={handleDeleteAccount}
+            onDeleteAccount={() => setShowDeleteAccount(true)}
             onUpgrade={handleUpgrade}
             plan={portfolio.plan}
           />
@@ -278,7 +328,7 @@ function Dashboard() {
 
           <div className="flex flex-col gap-2">
             <button
-              onClick={handleReset}
+              onClick={() => setShowResetConfirm(true)}
               disabled={resetting}
               className="rounded-xl bg-danger text-white font-bold py-3 text-sm hover:opacity-90 disabled:opacity-60 transition"
             >

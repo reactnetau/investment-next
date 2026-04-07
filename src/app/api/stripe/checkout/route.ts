@@ -42,7 +42,7 @@ export async function POST(req: Request) {
         quantity: 1,
       },
     ],
-    success_url: `${appUrl}/dashboard?upgrade=success`,
+    success_url: `${appUrl}/dashboard?upgrade=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/dashboard?upgrade=cancelled`,
   });
 

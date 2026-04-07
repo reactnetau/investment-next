@@ -24,6 +24,7 @@ function getFetchOptions() {
   return {
     headers: HEADERS,
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    cache: "no-store" as RequestCache,
   };
 }
 

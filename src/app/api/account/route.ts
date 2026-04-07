@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { stripe } from "@/lib/stripe";
 import { getSession, getUserId } from "@/lib/session";
 
 export async function DELETE() {
@@ -10,11 +11,13 @@ export async function DELETE() {
   const user = await db.user.findUnique({ where: { id: userId } });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
+  // Cancel any active Stripe subscription immediately before deleting
   if (user.stripeSubscriptionId) {
-    return NextResponse.json(
-      { error: "Please cancel your Pro subscription before deleting your account." },
-      { status: 400 }
-    );
+    try {
+      await stripe.subscriptions.cancel(user.stripeSubscriptionId);
+    } catch {
+      // If Stripe cancel fails (e.g. already cancelled), proceed with deletion anyway
+    }
   }
 
   await db.user.delete({ where: { id: userId } });
