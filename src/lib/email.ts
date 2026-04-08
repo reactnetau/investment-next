@@ -1,14 +1,27 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const FROM = process.env.EMAIL_FROM ?? "Investment Simulator <noreply@resend.dev>";
 const APP_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
+function createTransport() {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT ?? 587),
+    secure: process.env.SMTP_SECURE === "true", // true for port 465, false for 587
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
+
+const FROM = process.env.EMAIL_FROM ?? "Investment Simulator <noreply@investorsplayground.com>";
+
 export async function sendNewProSubscriberEmail(customerEmail: string) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
   const adminEmail = process.env.ADMIN_EMAIL;
   if (!adminEmail) return;
 
-  await resend.emails.send({
+  const transporter = createTransport();
+  await transporter.sendMail({
     from: FROM,
     to: adminEmail,
     subject: "New Pro subscriber — Investment Simulator",
@@ -20,10 +33,10 @@ export async function sendNewProSubscriberEmail(customerEmail: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
   const resetUrl = `${APP_URL}/reset-password?token=${token}`;
 
-  await resend.emails.send({
+  const transporter = createTransport();
+  await transporter.sendMail({
     from: FROM,
     to: email,
     subject: "Reset your password — Investment Simulator",

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
 import { getSession, getUserId } from "@/lib/session";
+import { sendNewProSubscriberEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -17,13 +18,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Payment not completed" }, { status: 400 });
   }
 
-  await db.user.update({
+  const user = await db.user.update({
     where: { id: userId },
     data: {
       plan: "pro",
       stripeCustomerId: checkoutSession.customer as string ?? undefined,
     },
   });
+
+  try {
+    await sendNewProSubscriberEmail(user.email);
+  } catch {
+    // Don't fail the request if email sending fails
+  }
 
   return NextResponse.json({ ok: true });
 }
