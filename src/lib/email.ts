@@ -19,18 +19,20 @@ async function getAccessToken(): Promise<string> {
 }
 
 function buildRawEmail(to: string, subject: string, html: string): string {
+  const encodedBody = Buffer.from(html, "utf-8").toString("base64");
+
   const message = [
     `From: ${FROM}`,
     `To: ${to}`,
     `Subject: ${subject}`,
     "MIME-Version: 1.0",
     "Content-Type: text/html; charset=utf-8",
-    "Content-Transfer-Encoding: quoted-printable",
+    "Content-Transfer-Encoding: base64",
     "",
-    html.replace(/[^\x00-\x7E]/g, (c) => `=${c.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0")}`),
+    encodedBody,
   ].join("\r\n");
 
-  return Buffer.from(message, "utf-8")
+  return Buffer.from(message)
     .toString("base64")
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
@@ -76,7 +78,11 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     "Reset your password - Investment Simulator",
     `
       <p>You requested a password reset for your Investment Simulator account.</p>
-      <p><a href="${resetUrl}">Click here to reset your password</a></p>
+      <p>
+        <a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background-color:#d8a23d;color:#2e2416;font-weight:bold;text-decoration:none;border-radius:8px;">
+          Reset Password
+        </a>
+      </p>
       <p>This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>
     `
   );
