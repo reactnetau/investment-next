@@ -7,7 +7,7 @@ function isValidEmail(email: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const { email, password, confirmPassword, currency } = await req.json();
+  const { email, password, confirmPassword, currency, profileName } = await req.json();
 
   if (!email?.trim() || !isValidEmail(email.trim())) {
     return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
@@ -29,21 +29,28 @@ export async function POST(req: NextRequest) {
   const salt = await bcrypt.genSalt(12);
   const passwordHash = await bcrypt.hash(password, salt);
   const portfolioCurrency = currency === "usd" ? "usd" : "aud";
+  const name = profileName?.trim() || "My Portfolio";
 
-  const user = await db.user.create({
-    data: {
-      email: normalizedEmail,
-      passwordHash,
-      salt,
-      portfolio: {
-        create: {
-          cash: 10000,
-          startingCash: 10000,
-          currency: portfolioCurrency,
-          currentDay: new Date(),
-        },
+  const user = await db.$transaction(async (tx) => {
+    const newUser = await tx.user.create({
+      data: { email: normalizedEmail, passwordHash, salt },
+    });
+
+    const portfolio = await tx.portfolio.create({
+      data: {
+        userId: newUser.id,
+        name,
+        cash: 10000,
+        startingCash: 10000,
+        currency: portfolioCurrency,
+        currentDay: new Date(),
       },
-    },
+    });
+
+    return tx.user.update({
+      where: { id: newUser.id },
+      data: { activeProfileId: portfolio.id },
+    });
   });
 
   return NextResponse.json({ userId: user.id }, { status: 201 });

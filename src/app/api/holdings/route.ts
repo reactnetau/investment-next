@@ -4,6 +4,7 @@ import { fetchLivePrice, getAudUsdRate } from "@/lib/price";
 import { convertAmount } from "@/lib/currency";
 import { getSession, getUserId } from "@/lib/session";
 import { FREE_HOLDING_LIMIT } from "@/lib/plans";
+import { getActivePortfolioId } from "@/lib/profile";
 
 function moneyToCents(value: number): number {
   return Math.round(value * 100);
@@ -39,8 +40,11 @@ export async function POST(req: NextRequest) {
 
   let quantityNum: number;
 
+  const portfolioId = await getActivePortfolioId(userId);
+  if (!portfolioId) return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
+
   const portfolio = await db.portfolio.findUnique({
-    where: { userId },
+    where: { id: portfolioId },
     include: { _count: { select: { holdings: true } } },
   });
   if (!portfolio) return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });

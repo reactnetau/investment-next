@@ -11,23 +11,25 @@ datasource db {
 }
 
 model User {
-  id                     String    @id @default(cuid())
-  email                  String    @unique
+  id                     String      @id @default(cuid())
+  email                  String      @unique
   passwordHash           String
   salt                   String
-  createdAt              DateTime  @default(now())
+  createdAt              DateTime    @default(now())
   resetToken             String?
   resetTokenExpiry       DateTime?
-  plan                   String    @default("free")
+  plan                   String      @default("free")
   stripeCustomerId       String?
   stripeSubscriptionId   String?
-  portfolio              Portfolio?
+  activeProfileId        String?
+  portfolios             Portfolio[]
 }
 
 model Portfolio {
   id           String    @id @default(cuid())
-  userId       String    @unique
+  userId       String
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String    @default("My Portfolio")
   cash         Float     @default(10000)
   startingCash Float     @default(10000)
   currency     String    @default("aud")

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getAudUsdRate, fetchLivePrice } from "@/lib/price";
 import { stripe } from "@/lib/stripe";
 import { getSession, getUserId } from "@/lib/session";
+import { getActivePortfolioId } from "@/lib/profile";
 
 function getNextDailyUtcRefresh(hourUtc: number, minuteUtc = 0): Date {
   const now = new Date();
@@ -16,22 +17,37 @@ function getNextDailyUtcRefresh(hourUtc: number, minuteUtc = 0): Date {
   return next;
 }
 
-/** GET /api/portfolio — fetch current portfolio for the signed-in user */
+/** GET /api/portfolio — fetch active portfolio for the signed-in user */
 export async function GET() {
   try {
     const session = await getSession();
     const userId = getUserId(session);
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const [portfolio, user] = await Promise.all([
-      db.portfolio.upsert({
-        where: { userId },
-        create: { userId, cash: 10000, startingCash: 10000, currentDay: new Date() },
-        update: {},
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { plan: true, stripeCustomerId: true },
+    });
+
+    let portfolioId = await getActivePortfolioId(userId);
+
+    let portfolio;
+    if (portfolioId) {
+      portfolio = await db.portfolio.findUnique({
+        where: { id: portfolioId },
         include: { holdings: { orderBy: { createdAt: "asc" } } },
-      }),
-      db.user.findUnique({ where: { id: userId }, select: { plan: true, stripeCustomerId: true } }),
-    ]);
+      });
+    }
+
+    // No portfolio exists at all — create a default one
+    if (!portfolio) {
+      portfolio = await db.portfolio.create({
+        data: { userId, name: "My Portfolio", cash: 10000, startingCash: 10000, currentDay: new Date() },
+        include: { holdings: { orderBy: { createdAt: "asc" } } },
+      });
+      await db.user.update({ where: { id: userId }, data: { activeProfileId: portfolio.id } });
+      portfolioId = portfolio.id;
+    }
 
     // If the user has a Stripe customer but plan isn't pro, check Stripe directly for a completed payment
     if (user?.stripeCustomerId && user.plan !== "pro") {
@@ -43,7 +59,7 @@ export async function GET() {
         const paid = sessions.data.some((s) => s.payment_status === "paid");
         if (paid) {
           await db.user.update({ where: { id: userId }, data: { plan: "pro" } });
-          user.plan = "pro";
+          if (user) user.plan = "pro";
         }
       } catch {
         // If Stripe check fails, fall through with the existing plan value
@@ -80,17 +96,20 @@ export async function GET() {
   }
 }
 
-/** PATCH /api/portfolio — reset portfolio */
+/** PATCH /api/portfolio — reset portfolio or refresh prices */
 export async function PATCH(req: NextRequest) {
   const session = await getSession();
   const userId = getUserId(session);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const portfolioId = await getActivePortfolioId(userId);
+  if (!portfolioId) return NextResponse.json({ error: "No portfolio found" }, { status: 404 });
+
   const { action } = await req.json();
 
   if (action === "reset") {
     const portfolio = await db.portfolio.update({
-      where: { userId },
+      where: { id: portfolioId },
       data: {
         cash: 10000,
         startingCash: 10000,
@@ -105,7 +124,7 @@ export async function PATCH(req: NextRequest) {
   if (action === "refresh_prices") {
     try {
       const portfolio = await db.portfolio.findUnique({
-        where: { userId },
+        where: { id: portfolioId },
         include: { holdings: true },
       });
       if (!portfolio) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -135,7 +154,7 @@ export async function PATCH(req: NextRequest) {
 
       // Return full enriched response (same shape as GET)
       const [updated, user, fxRate] = await Promise.all([
-        db.portfolio.findUnique({ where: { userId }, include: { holdings: { orderBy: { createdAt: "asc" } } } }),
+        db.portfolio.findUnique({ where: { id: portfolioId }, include: { holdings: { orderBy: { createdAt: "asc" } } } }),
         db.user.findUnique({ where: { id: userId }, select: { plan: true } }),
         getAudUsdRate(),
       ]);

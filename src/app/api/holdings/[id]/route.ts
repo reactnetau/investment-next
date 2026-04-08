@@ -19,14 +19,18 @@ export async function DELETE(
   const userId = getUserId(session);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const holding = await db.holding.findUnique({ where: { id } });
+  const holding = await db.holding.findUnique({
+    where: { id },
+    include: { portfolio: true },
+  });
   if (!holding) return NextResponse.json({ error: "Holding not found" }, { status: 404 });
 
-  const portfolio = await db.portfolio.findUnique({ where: { userId } });
-  if (!portfolio || portfolio.id !== holding.portfolioId) {
+  // Verify the holding belongs to this user (any of their portfolios)
+  if (holding.portfolio.userId !== userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const portfolio = holding.portfolio;
   const priceCurrency = (holding.priceCurrency ?? "aud") as Currency;
   const portfolioCurrency = (portfolio.currency ?? "aud") as Currency;
   const fxRate = await getAudUsdRate();

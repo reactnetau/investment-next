@@ -87,12 +87,12 @@ export default function OpenGraphImage() {
                 maxWidth: 700,
               }}
             >
-              Practice with live ASX prices, track your portfolio, and learn in a calm simulated environment.
+              Practice with live ASX and NASDAQ prices, track your portfolio, and learn in a calm simulated environment.
             </div>
           </div>
 
           <div style={{ display: "flex", gap: 18 }}>
-            {["Live ASX pricing", "Portfolio tracking", "Risk-free practice"].map((label) => (
+            {["Live ASX & NASDAQ pricing", "Portfolio tracking", "Risk-free practice"].map((label) => (
               <div
                 key={label}
                 style={{

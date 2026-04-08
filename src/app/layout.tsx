@@ -8,10 +8,10 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "Investors Playground",
-  description: "Practice portfolio moves with live ASX prices and a polished investing dashboard.",
+  description: "Practice portfolio moves with live ASX and NASDAQ prices and a polished investing dashboard.",
   openGraph: {
     title: "Investors Playground",
-    description: "Practice portfolio moves with live ASX prices and a polished investing dashboard.",
+    description: "Practice portfolio moves with live ASX and NASDAQ prices and a polished investing dashboard.",
     url: siteUrl,
     siteName: "Investors Playground",
     images: [
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Investors Playground",
-    description: "Practice portfolio moves with live ASX prices and a polished investing dashboard.",
+    description: "Practice portfolio moves with live ASX and NASDAQ prices and a polished investing dashboard.",
     images: ["/twitter-image"],
   },
 };

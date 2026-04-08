@@ -10,6 +10,7 @@ import { PortfolioStats } from "@/components/PortfolioStats";
 import { HoldingsTable } from "@/components/HoldingsTable";
 import { AddHoldingForm } from "@/components/AddHoldingForm";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
+import { ProfileSwitcher } from "@/components/ProfileSwitcher";
 import { ChangePasswordModal } from "@/components/ChangePasswordModal";
 import { SellModal } from "@/components/SellModal";
 import { DeleteAccountModal } from "@/components/DeleteAccountModal";
@@ -17,6 +18,7 @@ import { ConfirmModal } from "@/components/ConfirmModal";
 import { FREE_HOLDING_LIMIT } from "@/lib/plans";
 import { formatMoney } from "@/lib/currency";
 import { PriceCountdown } from "@/components/PriceCountdown";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 type PortfolioWithHoldings = Portfolio & {
   holdings: HoldingWithAge[];
@@ -25,6 +27,14 @@ type PortfolioWithHoldings = Portfolio & {
   fxRate: number;
   nextPriceRefresh: string | null;
 };
+
+interface ProfileSummary {
+  id: string;
+  name: string;
+  holdingCount: number;
+  isActive: boolean;
+  currency: string;
+}
 
 export default function DashboardPage() {
   return (
@@ -40,44 +50,54 @@ function Dashboard() {
   const searchParams = useSearchParams();
 
   const [portfolio, setPortfolio] = useState<PortfolioWithHoldings | null>(null);
+  const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
   const [statusMsg, setStatusMsg] = useState("Loading portfolio…");
   const [selling, setSelling] = useState<string | null>(null);
   const [sellTarget, setSellTarget] = useState<Holding | null>(null);
   const [resetting, setResetting] = useState(false);
   const [refreshingPrices, setRefreshingPrices] = useState(false);
-    async function handleRefreshPrices() {
-      setRefreshingPrices(true);
-      setStatusMsg("Refreshing live prices for your holdings…");
-      try {
-        const res = await fetch("/api/portfolio", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "refresh_prices" }),
-        });
-        if (!res.ok) {
-          const data = await res.json();
-          setStatusMsg(data.error ?? "Failed to refresh prices.");
-          return;
-        }
+
+  async function handleRefreshPrices() {
+    setRefreshingPrices(true);
+    setStatusMsg("Refreshing live prices for your holdings…");
+    try {
+      const res = await fetch("/api/portfolio", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "refresh_prices" }),
+      });
+      if (!res.ok) {
         const data = await res.json();
-        setPortfolio(data);
-        setStatusMsg("Live prices updated!");
-      } catch {
-        setStatusMsg("Could not reach the server. Please try again.");
-      } finally {
-        setRefreshingPrices(false);
+        setStatusMsg(data.error ?? "Failed to refresh prices.");
+        return;
       }
+      const data = await res.json();
+      setPortfolio(data);
+      setStatusMsg("Live prices updated!");
+    } catch {
+      setStatusMsg("Could not reach the server. Please try again.");
+    } finally {
+      setRefreshingPrices(false);
     }
+  }
+
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showCancelSubConfirm, setShowCancelSubConfirm] = useState(false);
-  const [upgrading, setUpgrading] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
   }, [status, router]);
+
+  const loadProfiles = useCallback(async () => {
+    const res = await fetch("/api/profiles");
+    if (!res.ok) return;
+    const data = await res.json();
+    setProfiles(data.profiles ?? []);
+  }, []);
 
   const loadPortfolio = useCallback(async () => {
     const res = await fetch("/api/portfolio");
@@ -86,9 +106,13 @@ function Dashboard() {
     setPortfolio(data);
   }, []);
 
+  const loadAll = useCallback(async () => {
+    await Promise.all([loadPortfolio(), loadProfiles()]);
+  }, [loadPortfolio, loadProfiles]);
+
   useEffect(() => {
     if (status === "authenticated") {
-      loadPortfolio().then(async () => {
+      loadAll().then(async () => {
         const upgradeParam = searchParams.get("upgrade");
         if (upgradeParam === "success") {
           const sessionId = searchParams.get("session_id");
@@ -98,7 +122,7 @@ function Dashboard() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ sessionId }),
             });
-            await loadPortfolio();
+            await loadAll();
           }
           setStatusMsg("You're now on Pro. Welcome to Investment Simulator Pro!");
           router.replace("/dashboard");
@@ -110,7 +134,7 @@ function Dashboard() {
         }
       });
     }
-  }, [status, loadPortfolio, session, searchParams, router]);
+  }, [status, loadAll, session, searchParams, router]);
 
   async function confirmSell() {
     if (!sellTarget) return;
@@ -142,6 +166,7 @@ function Dashboard() {
     const data = await res.json();
     setPortfolio(data);
     setStatusMsg("Portfolio reset. Starting cash: $10,000.00.");
+    loadProfiles();
   }
 
   async function confirmCancelSubscription() {
@@ -149,7 +174,7 @@ function Dashboard() {
     const res = await fetch("/api/stripe/cancel", { method: "POST" });
     const data = await res.json();
     setStatusMsg(data.message ?? data.error ?? "Something went wrong.");
-    if (res.ok) loadPortfolio();
+    if (res.ok) loadAll();
   }
 
   async function confirmDeleteAccount() {
@@ -170,22 +195,6 @@ function Dashboard() {
     return "aud";
   }
 
-  async function handleUpgrade() {
-    setUpgrading(true);
-    const res = await fetch("/api/stripe/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ locale: getUserLocale() }),
-    });
-    if (!res.ok) {
-      setUpgrading(false);
-      setStatusMsg("Could not start checkout. Try again.");
-      return;
-    }
-    const { url } = await res.json();
-    window.location.href = url;
-  }
-
   const priceLabel = getUserLocale() === "usd" ? "$3.00 USD" : "$5.00 AUD";
 
   if (status === "loading" || !portfolio) {
@@ -201,6 +210,10 @@ function Dashboard() {
 
   return (
     <div className="w-full min-h-screen px-5 py-7 pb-12">
+      {showUpgradeModal && (
+        <UpgradeModal onClose={() => setShowUpgradeModal(false)} />
+      )}
+
       {showChangePassword && (
         <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
       )}
@@ -217,7 +230,7 @@ function Dashboard() {
       {showResetConfirm && (
         <ConfirmModal
           title="Reset Portfolio"
-          message="Reset your entire portfolio? This cannot be undone."
+          message={`Reset "${profiles.find((p) => p.isActive)?.name ?? "this portfolio"}"? This cannot be undone.`}
           confirmLabel="Reset"
           danger
           loading={resetting}
@@ -249,7 +262,7 @@ function Dashboard() {
 
       {/* Header */}
       <div className="flex justify-between items-start gap-4 mb-5">
-        <div>
+        <div className="min-w-0">
           <div className="flex items-center gap-3">
             <h1 className="text-[2.1rem] font-bold text-ink tracking-wide leading-tight">
               Investment Simulator
@@ -263,12 +276,26 @@ function Dashboard() {
           <div className="text-muted text-sm mt-1">
             Add stocks, refresh live prices from the internet, and track your total portfolio change. Supports ASX and NASDAQ.
           </div>
+          {profiles.length > 0 && (
+            <div className="mt-3">
+              <ProfileSwitcher
+                profiles={profiles}
+                plan={portfolio.plan}
+                onSwitch={async () => {
+                  setStatusMsg("Loading portfolio…");
+                  await loadAll();
+                  setStatusMsg("Portfolio loaded.");
+                }}
+                onUpgrade={() => setShowUpgradeModal(true)}
+              />
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-3 shrink-0 pt-1">
           <HamburgerMenu
             onChangePassword={() => setShowChangePassword(true)}
             onDeleteAccount={() => setShowDeleteAccount(true)}
-            onUpgrade={handleUpgrade}
+            onUpgrade={() => setShowUpgradeModal(true)}
             plan={portfolio.plan}
           />
         </div>
@@ -285,11 +312,10 @@ function Dashboard() {
             <span className="text-sm text-muted ml-2">Unlock unlimited stocks with a one-off payment.</span>
           </div>
           <button
-            onClick={handleUpgrade}
-            disabled={upgrading}
-            className="shrink-0 rounded-xl bg-[#d8a23d] text-[#2e2416] font-bold px-4 py-2 text-sm hover:opacity-90 disabled:opacity-60 transition"
+            onClick={() => setShowUpgradeModal(true)}
+            className="shrink-0 rounded-xl bg-[#d8a23d] text-[#2e2416] font-bold px-4 py-2 text-sm hover:opacity-90 transition"
           >
-            {upgrading ? "Redirecting…" : `Unlock Pro — One-off ${priceLabel}`}
+            Unlock Pro — One-off {priceLabel}
           </button>
         </div>
       )}
@@ -319,9 +345,12 @@ function Dashboard() {
           <h2 className="text-base font-bold text-ink mb-4">Add Investment</h2>
 
           <AddHoldingForm
-            onAdded={() => loadPortfolio()}
+            onAdded={() => {
+              loadPortfolio();
+              loadProfiles();
+            }}
             onStatus={(msg) => setStatusMsg(msg)}
-            onUpgradeRequired={handleUpgrade}
+            onUpgradeRequired={() => setShowUpgradeModal(true)}
           />
 
           <h2 className="text-base font-bold text-ink mt-6 mb-3">Portfolio Actions</h2>
@@ -340,7 +369,7 @@ function Dashboard() {
             Starting cash is {formatMoney(10000, (portfolio.currency ?? "aud") as "aud" | "usd")}. Enter an ASX code (e.g. BHP) or NASDAQ/NYSE code (e.g. META, AAPL).
             Leave the buy-in price blank to use the live price. All values shown in {(portfolio.currency ?? "AUD").toUpperCase()}.
             {isFree && (
-              <span className="block mt-1">Free accounts can hold up to {FREE_HOLDING_LIMIT} stocks. <button onClick={handleUpgrade} className="text-accent underline">Unlock unlimited with a one-off payment</button>.</span>
+              <span className="block mt-1">Free accounts can hold up to {FREE_HOLDING_LIMIT} stocks. <button onClick={() => setShowUpgradeModal(true)} className="text-accent underline">Unlock unlimited with a one-off payment</button>.</span>
             )}
           </p>
         </div>

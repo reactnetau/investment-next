@@ -9,6 +9,7 @@ import { currencyFromTimezone } from "@/lib/currency";
 export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [profileName, setProfileName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,7 +28,13 @@ export default function RegisterPage() {
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, confirmPassword, currency: currencyFromTimezone() }),
+      body: JSON.stringify({
+        email,
+        password,
+        confirmPassword,
+        currency: currencyFromTimezone(),
+        profileName: profileName.trim() || "My Portfolio",
+      }),
     });
 
     if (!res.ok) {
@@ -67,6 +74,19 @@ export default function RegisterPage() {
                 required
                 autoFocus
               />
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm text-muted">
+              Portfolio Name
+              <input
+                type="text"
+                className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
+                placeholder="My Portfolio"
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                maxLength={40}
+              />
+              <span className="text-xs text-muted mt-0.5">You can create more portfolios after signing up.</span>
             </label>
 
             <label className="flex flex-col gap-1 text-sm text-muted">
