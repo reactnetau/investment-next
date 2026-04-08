@@ -1,5 +1,5 @@
 const DEFAULT_APP_URL = "http://localhost:3000";
-const DEFAULT_SITE_URL = "https://www.investorsplayground.com";
+const DEFAULT_SITE_URL = "https://investorsplayground.com";
 
 function normalizeUrl(value: string | undefined, fallback: string): string {
   const trimmed = value?.trim();
