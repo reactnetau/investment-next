@@ -15,9 +15,17 @@ export async function GET() {
   try {
     const res = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: process.env.GMAIL_CLIENT_ID ?? "",
+        client_secret: process.env.GMAIL_CLIENT_SECRET ?? "",
+        refresh_token: process.env.GMAIL_REFRESH_TOKEN ?? "",
+        grant_type: "refresh_token",
+      }),
       signal: AbortSignal.timeout(5000),
     });
-    results.google_oauth = `reachable (status ${res.status})`;
+    const data = await res.json();
+    results.google_oauth = JSON.stringify(data);
   } catch (e) {
     results.google_oauth = String(e);
   }
