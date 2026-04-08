@@ -63,7 +63,7 @@ export async function sendNewProSubscriberEmail(customerEmail: string) {
 
   await sendEmail(
     adminEmail,
-    "New Pro subscriber — Investment Simulator",
+    "New Pro subscriber - Investment Simulator",
     `<p>Someone just upgraded to Pro!</p><p><strong>Email:</strong> ${customerEmail}</p>`
   );
 }
@@ -73,7 +73,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
 
   await sendEmail(
     email,
-    "Reset your password — Investment Simulator",
+    "Reset your password - Investment Simulator",
     `
       <p>You requested a password reset for your Investment Simulator account.</p>
       <p><a href="${resetUrl}">Click here to reset your password</a></p>
