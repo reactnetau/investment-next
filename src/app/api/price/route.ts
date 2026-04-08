@@ -3,6 +3,7 @@ import { fetchLivePrice, getAudUsdRate } from "@/lib/price";
 import { convertAmount } from "@/lib/currency";
 import { db } from "@/lib/db";
 import { getSession, getUserId } from "@/lib/session";
+import { getActivePortfolioId } from "@/lib/profile";
 import type { Currency } from "@/lib/currency";
 
 export async function GET(req: NextRequest) {
@@ -17,9 +18,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "code is required" }, { status: 400 });
   }
 
+  const portfolioId = await getActivePortfolioId(userId);
+
   const [price, portfolio] = await Promise.all([
     fetchLivePrice(code.trim()),
-    db.portfolio.findUnique({ where: { userId }, select: { currency: true } }),
+    portfolioId
+      ? db.portfolio.findUnique({ where: { id: portfolioId }, select: { currency: true } })
+      : Promise.resolve(null),
   ]);
 
   if (price === null) {
