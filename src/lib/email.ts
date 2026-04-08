@@ -15,7 +15,11 @@ async function createTransport() {
     refresh_token: process.env.GMAIL_REFRESH_TOKEN,
   });
 
-  const { token: accessToken } = await oauth2Client.getAccessToken();
+  const tokenResponse = await Promise.race([
+    oauth2Client.getAccessToken(),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Gmail OAuth timed out — check GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET and GMAIL_REFRESH_TOKEN")), 8000)),
+  ]) as { token: string };
+  const accessToken = tokenResponse.token;
 
   return nodemailer.createTransport({
     service: "gmail",
