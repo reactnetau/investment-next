@@ -1,25 +1,28 @@
 import nodemailer from "nodemailer";
-import { google } from "googleapis";
 
 const APP_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 const FROM = `Investment Simulator <${process.env.GMAIL_USER}>`;
 
-async function createTransport() {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GMAIL_CLIENT_ID,
-    process.env.GMAIL_CLIENT_SECRET,
-    "https://developers.google.com/oauthplayground"
-  );
-
-  oauth2Client.setCredentials({
-    refresh_token: process.env.GMAIL_REFRESH_TOKEN,
+async function getAccessToken(): Promise<string> {
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: process.env.GMAIL_CLIENT_ID ?? "",
+      client_secret: process.env.GMAIL_CLIENT_SECRET ?? "",
+      refresh_token: process.env.GMAIL_REFRESH_TOKEN ?? "",
+      grant_type: "refresh_token",
+    }),
+    signal: AbortSignal.timeout(8000),
   });
 
-  const tokenResponse = await Promise.race([
-    oauth2Client.getAccessToken(),
-    new Promise((_, reject) => setTimeout(() => reject(new Error("Gmail OAuth timed out — check GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET and GMAIL_REFRESH_TOKEN")), 8000)),
-  ]) as { token: string };
-  const accessToken = tokenResponse.token;
+  const data = await res.json();
+  if (!res.ok) throw new Error(`OAuth token error: ${JSON.stringify(data)}`);
+  return data.access_token;
+}
+
+async function createTransport() {
+  const accessToken = await getAccessToken();
 
   return nodemailer.createTransport({
     service: "gmail",
@@ -29,7 +32,7 @@ async function createTransport() {
       clientId: process.env.GMAIL_CLIENT_ID,
       clientSecret: process.env.GMAIL_CLIENT_SECRET,
       refreshToken: process.env.GMAIL_REFRESH_TOKEN,
-      accessToken: accessToken as string,
+      accessToken,
     },
   });
 }
