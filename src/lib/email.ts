@@ -1,4 +1,6 @@
-const APP_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+import { getAppUrl } from "@/lib/app-url";
+
+const APP_URL = getAppUrl();
 const FROM = `Investment Simulator <${process.env.GMAIL_USER}>`;
 
 async function getAccessToken(): Promise<string> {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
 import { getSession, getUserId } from "@/lib/session";
+import { getAppUrl } from "@/lib/app-url";
 
 const PRICES: Record<string, { currency: string; amount: number; label: string }> = {
   usd: { currency: "usd", amount: 300, label: "$3.00 USD" },
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
     await db.user.update({ where: { id: userId }, data: { stripeCustomerId: customerId } });
   }
 
-  const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const appUrl = getAppUrl();
 
   const checkoutSession = await stripe.checkout.sessions.create({
     customer: customerId,
