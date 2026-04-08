@@ -25,11 +25,12 @@ function buildRawEmail(to: string, subject: string, html: string): string {
     `Subject: ${subject}`,
     "MIME-Version: 1.0",
     "Content-Type: text/html; charset=utf-8",
+    "Content-Transfer-Encoding: quoted-printable",
     "",
-    html,
+    html.replace(/[^\x00-\x7E]/g, (c) => `=${c.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0")}`),
   ].join("\r\n");
 
-  return Buffer.from(message)
+  return Buffer.from(message, "utf-8")
     .toString("base64")
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
