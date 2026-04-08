@@ -3,41 +3,17 @@ import { NextResponse } from "next/server";
 export async function GET() {
   const results: Record<string, string> = {};
 
-  // Test 1: basic internet
+  // Test 1: send email
   try {
-    const res = await fetch("https://httpbin.org/get", { signal: AbortSignal.timeout(5000) });
-    results.internet = res.ok ? "ok" : `status ${res.status}`;
+    const { sendPasswordResetEmail } = await import("@/lib/email");
+    await Promise.race([
+      sendPasswordResetEmail(process.env.ADMIN_EMAIL ?? "", "test-token"),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Timed out after 10s — Gmail SMTP port likely blocked")), 10000)),
+    ]);
+    results.email = "sent ok";
   } catch (e) {
-    results.internet = String(e);
+    results.email = String(e);
   }
-
-  // Test 2: Google OAuth endpoint
-  try {
-    const res = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: process.env.GMAIL_CLIENT_ID ?? "",
-        client_secret: process.env.GMAIL_CLIENT_SECRET ?? "",
-        refresh_token: process.env.GMAIL_REFRESH_TOKEN ?? "",
-        grant_type: "refresh_token",
-      }),
-      signal: AbortSignal.timeout(5000),
-    });
-    const data = await res.json();
-    results.google_oauth = JSON.stringify(data);
-  } catch (e) {
-    results.google_oauth = String(e);
-  }
-
-  // Test 3: env vars present
-  results.env = JSON.stringify({
-    GMAIL_USER: !!process.env.GMAIL_USER,
-    GMAIL_CLIENT_ID: !!process.env.GMAIL_CLIENT_ID,
-    GMAIL_CLIENT_SECRET: !!process.env.GMAIL_CLIENT_SECRET,
-    GMAIL_REFRESH_TOKEN: !!process.env.GMAIL_REFRESH_TOKEN,
-    ADMIN_EMAIL: !!process.env.ADMIN_EMAIL,
-  });
 
   return NextResponse.json(results);
 }
