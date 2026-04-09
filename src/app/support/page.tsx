@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
@@ -16,12 +16,19 @@ const TOPICS = [
 ];
 
 export default function SupportPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === "authenticated";
 
   const [topic, setTopic] = useState("");
   const [message, setMessage] = useState("");
-  const [fromEmail, setFromEmail] = useState(session?.user?.email ?? "");
+  const [fromEmail, setFromEmail] = useState("");
   const [fromName, setFromName] = useState("");
+
+  useEffect(() => {
+    if (session?.user?.email) {
+      setFromEmail(session.user.email);
+    }
+  }, [session?.user?.email]);
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
@@ -115,7 +122,9 @@ export default function SupportPage() {
                   type="email"
                   className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60 disabled:cursor-not-allowed"
                   value={fromEmail}
-                  disabled
+                  onChange={(e) => setFromEmail(e.target.value)}
+                  disabled={isLoggedIn}
+                  placeholder="you@example.com"
                   required
                 />
               </label>
