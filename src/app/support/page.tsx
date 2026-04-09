@@ -10,8 +10,7 @@ const TOPICS = [
   "A stock price isn't updating",
   "I was charged but my account isn't upgraded",
   "I can't find a stock (ASX or NASDAQ)",
-  "I want to cancel my subscription",
-  "I want a refund",
+"I want a refund",
   "I found a bug",
   "Other",
 ];
