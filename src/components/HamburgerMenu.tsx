@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { signOut } from "next-auth/react";
+import Link from "next/link";
 
 interface Props {
   onChangePassword: () => void;
@@ -47,6 +48,14 @@ export function HamburgerMenu({ onChangePassword, onDeleteAccount, onUpgrade, pl
           >
             Change Password
           </button>
+          <div className="border-t border-line" />
+          <Link
+            href="/support"
+            onClick={() => setOpen(false)}
+            className="block w-full text-left px-4 py-3 text-sm text-ink hover:bg-[#f0ece3] transition"
+          >
+            Contact Support
+          </Link>
           {plan !== "pro" && (
             <>
               <div className="border-t border-line" />

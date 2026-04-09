@@ -20,19 +20,22 @@ async function getAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-function buildRawEmail(to: string, subject: string, html: string): string {
+function buildRawEmail(to: string, subject: string, html: string, replyTo?: string): string {
   const encodedBody = Buffer.from(html, "utf-8").toString("base64");
 
-  const message = [
+  const headers = [
     `From: ${FROM}`,
     `To: ${to}`,
     `Subject: ${subject}`,
+    ...(replyTo ? [`Reply-To: ${replyTo}`] : []),
     "MIME-Version: 1.0",
     "Content-Type: text/html; charset=utf-8",
     "Content-Transfer-Encoding: base64",
     "",
     encodedBody,
-  ].join("\r\n");
+  ];
+
+  const message = headers.join("\r\n");
 
   return Buffer.from(message)
     .toString("base64")
@@ -41,9 +44,9 @@ function buildRawEmail(to: string, subject: string, html: string): string {
     .replace(/=+$/, "");
 }
 
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+async function sendEmail(to: string, subject: string, html: string, replyTo?: string): Promise<void> {
   const accessToken = await getAccessToken();
-  const raw = buildRawEmail(to, subject, html);
+  const raw = buildRawEmail(to, subject, html, replyTo);
 
   const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
     method: "POST",
@@ -87,5 +90,34 @@ export async function sendPasswordResetEmail(email: string, token: string) {
       </p>
       <p>This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>
     `
+  );
+}
+
+export async function sendSupportEmail({
+  topic,
+  message,
+  fromEmail,
+  fromName,
+}: {
+  topic: string;
+  message: string;
+  fromEmail: string;
+  fromName?: string;
+}): Promise<void> {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) throw new Error("ADMIN_EMAIL not configured.");
+
+  const displayName = fromName ? `${fromName} &lt;${fromEmail}&gt;` : fromEmail;
+
+  await sendEmail(
+    adminEmail,
+    `Support request: ${topic}`,
+    `
+      <p><strong>Topic:</strong> ${topic}</p>
+      <p><strong>From:</strong> ${displayName}</p>
+      <hr style="border:none;border-top:1px solid #e5e0d8;margin:16px 0;" />
+      <p style="white-space:pre-wrap;">${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+    `,
+    fromEmail
   );
 }
