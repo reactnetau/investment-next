@@ -89,7 +89,7 @@ function Dashboard() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
+    if (status === "unauthenticated") router.push("/");
   }, [status, router]);
 
   const loadProfiles = useCallback(async () => {
