@@ -375,7 +375,7 @@ function Dashboard() {
               <button
                 onClick={handleRefreshPrices}
                 disabled={refreshingPrices}
-                className="rounded-xl bg-accent text-white font-bold px-4 py-2 text-xs hover:opacity-90 disabled:opacity-60 transition"
+                className="rounded-xl bg-accent text-white font-bold px-2 py-1 text-[10px] sm:px-4 sm:py-2 sm:text-xs hover:opacity-90 disabled:opacity-60 transition"
                 title="Fetch the latest prices for your holdings from Yahoo Finance"
               >
                 {refreshingPrices ? "Updating…" : "Update Live Prices"}
