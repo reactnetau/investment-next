@@ -42,6 +42,22 @@ export function HamburgerMenu({ onChangePassword, onDeleteAccount, onUpgrade, pl
           className="absolute right-0 top-12 w-52 bg-panel border border-line rounded-2xl overflow-hidden z-50"
           style={{ boxShadow: "var(--shadow)" }}
         >
+          {[
+            { href: "/how-it-works", label: "How It Works" },
+            { href: "/pricing", label: "Pricing" },
+            { href: "/paper-trading-guide", label: "Paper Trading Guide" },
+            { href: "/asx-vs-nasdaq", label: "ASX vs NASDAQ" },
+          ].map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              onClick={() => setOpen(false)}
+              className="block w-full text-left px-4 py-3 text-sm text-muted hover:bg-[#f0ece3] hover:text-ink transition"
+            >
+              {l.label}
+            </Link>
+          ))}
+          <div className="border-t-2 border-line" />
           <button
             onClick={() => { setOpen(false); onChangePassword(); }}
             className="w-full text-left px-4 py-3 text-sm text-ink hover:bg-[#f0ece3] transition"
