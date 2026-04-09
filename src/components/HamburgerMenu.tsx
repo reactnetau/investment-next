@@ -85,7 +85,7 @@ export function HamburgerMenu({ onChangePassword, onDeleteAccount, onUpgrade, pl
           )}
           <div className="border-t border-line" />
           <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() => signOut({ callbackUrl: "/" })}
             className="w-full text-left px-4 py-3 text-sm text-bad hover:bg-[#f0ece3] transition"
           >
             Sign Out

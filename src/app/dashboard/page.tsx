@@ -185,7 +185,7 @@ function Dashboard() {
     setShowDeleteAccount(false);
     enqueueSnackbar(data.message ?? data.error ?? "Something went wrong.", { variant: res.ok ? "success" : "error" });
     if (res.ok) {
-      await signOut({ callbackUrl: "/login" });
+      await signOut({ callbackUrl: "/" });
     }
   }
 
