@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useSnackbar } from "notistack";
 
 interface Props {
   onAdded: () => void;
-  onStatus: (msg: string) => void;
   onUpgradeRequired: () => void;
 }
 
-export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) {
+export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
+  const { enqueueSnackbar } = useSnackbar();
   const [code, setCode] = useState("");
   const [buyPrice, setBuyPrice] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -20,17 +21,17 @@ export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) 
 
   async function fetchPrice() {
     if (!code.trim()) {
-      onStatus("Enter a stock code before fetching a live price.");
+      enqueueSnackbar("Enter a stock code before fetching a live price.", { variant: "warning" });
       return;
     }
     setFetchingPrice(true);
-    onStatus(`Fetching live price for ${code.trim().toUpperCase()}…`);
+    enqueueSnackbar(`Fetching live price for ${code.trim().toUpperCase()}…`, { variant: "info" });
 
     try {
       const res = await fetch(`/api/price?code=${encodeURIComponent(code.trim())}`);
       const data = await res.json();
       if (!res.ok) {
-        onStatus(data?.error || `Could not fetch a live price for ${code.trim().toUpperCase()} right now.`);
+        enqueueSnackbar(data?.error || `Could not fetch a live price for ${code.trim().toUpperCase()} right now.`, { variant: "error" });
         return;
       }
       // Always expect { price: { price: number, currency: string }, convertedPrice?: number, portfolioCurrency?: string }
@@ -38,7 +39,7 @@ export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) 
       const livePrice = priceObj?.price;
       const nativeCurrency: string = priceObj?.currency || "";
       if (typeof livePrice !== "number" || isNaN(livePrice) || !isFinite(livePrice)) {
-        onStatus(`Could not fetch a valid price for ${code.trim().toUpperCase()}.`);
+        enqueueSnackbar(`Could not fetch a valid price for ${code.trim().toUpperCase()}.`, { variant: "error" });
         return;
       }
       // If stock is in a different currency to the portfolio, show and use the converted price
@@ -52,9 +53,9 @@ export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) 
       setBuyPrice(formatted);
       setBuyPriceCurrency(displayCurrency);
       setExchange(nativeCurrency === "aud" ? "ASX" : "NASDAQ");
-      onStatus(`Fetched live price for ${code.trim().toUpperCase()}: ${displayCurrency.toUpperCase()} $${displayPrice.toFixed(2)}`);
+      enqueueSnackbar(`Fetched live price for ${code.trim().toUpperCase()}: ${displayCurrency.toUpperCase()} $${displayPrice.toFixed(2)}`, { variant: "success" });
     } catch (err) {
-      onStatus(`Error fetching price: ${err instanceof Error ? err.message : String(err)}`);
+      enqueueSnackbar(`Error fetching price: ${err instanceof Error ? err.message : String(err)}`, { variant: "error" });
     } finally {
       setFetchingPrice(false);
     }
@@ -63,7 +64,6 @@ export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setAdding(true);
-    onStatus("Adding stock…");
 
     const res = await fetch("/api/holdings", {
       method: "POST",
@@ -85,12 +85,12 @@ export function AddHoldingForm({ onAdded, onStatus, onUpgradeRequired }: Props) 
         onUpgradeRequired();
         return;
       }
-      onStatus(data.error ?? "Failed to add stock.");
+      enqueueSnackbar(data.error ?? "Failed to add stock.", { variant: "error" });
       return;
     }
 
     const data = await res.json();
-    onStatus(data.message);
+    enqueueSnackbar(data.message, { variant: "success" });
     setCode("");
     setBuyPrice("");
     setBuyPriceCurrency("");

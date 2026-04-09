@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, Suspense } from "react";
+import { useSnackbar } from "notistack";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Portfolio, Holding } from "@prisma/client";
@@ -49,9 +50,9 @@ function Dashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const { enqueueSnackbar } = useSnackbar();
   const [portfolio, setPortfolio] = useState<PortfolioWithHoldings | null>(null);
   const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
-  const [statusMsg, setStatusMsg] = useState("Loading portfolio…");
   const [selling, setSelling] = useState<string | null>(null);
   const [sellTarget, setSellTarget] = useState<Holding | null>(null);
   const [resetting, setResetting] = useState(false);
@@ -59,7 +60,6 @@ function Dashboard() {
 
   async function handleRefreshPrices() {
     setRefreshingPrices(true);
-    setStatusMsg("Refreshing live prices for your holdings…");
     try {
       const res = await fetch("/api/portfolio", {
         method: "PATCH",
@@ -68,14 +68,14 @@ function Dashboard() {
       });
       if (!res.ok) {
         const data = await res.json();
-        setStatusMsg(data.error ?? "Failed to refresh prices.");
+        enqueueSnackbar(data.error ?? "Failed to refresh prices.", { variant: "error" });
         return;
       }
       const data = await res.json();
       setPortfolio(data);
-      setStatusMsg("Live prices updated!");
+      enqueueSnackbar("Live prices updated!", { variant: "success" });
     } catch {
-      setStatusMsg("Could not reach the server. Please try again.");
+      enqueueSnackbar("Could not reach the server. Please try again.", { variant: "error" });
     } finally {
       setRefreshingPrices(false);
     }
@@ -124,13 +124,13 @@ function Dashboard() {
             });
             await loadAll();
           }
-          setStatusMsg("You're now on Pro. Welcome to Investment Simulator Pro!");
+          enqueueSnackbar("You're now on Pro. Welcome to Investment Simulator Pro!", { variant: "success" });
           router.replace("/dashboard");
         } else if (upgradeParam === "cancelled") {
-          setStatusMsg("Upgrade cancelled.");
+          enqueueSnackbar("Upgrade cancelled.", { variant: "info" });
           router.replace("/dashboard");
         } else {
-          setStatusMsg(`Signed in as ${session?.user?.name ?? ""}. Portfolio loaded.`);
+          enqueueSnackbar(`Signed in as ${session?.user?.name ?? ""}. Portfolio loaded.`, { variant: "success" });
         }
       });
     }
@@ -145,11 +145,11 @@ function Dashboard() {
     setSellTarget(null);
     if (!res.ok) {
       const data = await res.json();
-      setStatusMsg(data.error ?? "Failed to sell.");
+      enqueueSnackbar(data.error ?? "Failed to sell.", { variant: "error" });
       return;
     }
     const data = await res.json();
-    setStatusMsg(data.message);
+    enqueueSnackbar(data.message, { variant: "success" });
     loadPortfolio();
   }
 
@@ -165,7 +165,7 @@ function Dashboard() {
     if (!res.ok) return;
     const data = await res.json();
     setPortfolio(data);
-    setStatusMsg("Portfolio reset. Starting cash: $10,000.00.");
+    enqueueSnackbar("Portfolio reset. Starting cash: $10,000.00.", { variant: "success" });
     loadProfiles();
   }
 
@@ -173,7 +173,7 @@ function Dashboard() {
     setShowCancelSubConfirm(false);
     const res = await fetch("/api/stripe/cancel", { method: "POST" });
     const data = await res.json();
-    setStatusMsg(data.message ?? data.error ?? "Something went wrong.");
+    enqueueSnackbar(data.message ?? data.error ?? "Something went wrong.", { variant: res.ok ? "success" : "error" });
     if (res.ok) loadAll();
   }
 
@@ -183,7 +183,7 @@ function Dashboard() {
     const data = await res.json();
     setDeletingAccount(false);
     setShowDeleteAccount(false);
-    setStatusMsg(data.message ?? data.error ?? "Something went wrong.");
+    enqueueSnackbar(data.message ?? data.error ?? "Something went wrong.", { variant: res.ok ? "success" : "error" });
     if (res.ok) {
       await signOut({ callbackUrl: "/login" });
     }
@@ -282,9 +282,8 @@ function Dashboard() {
                 profiles={profiles}
                 plan={portfolio.plan}
                 onSwitch={async () => {
-                  setStatusMsg("Loading portfolio…");
                   await loadAll();
-                  setStatusMsg("Portfolio loaded.");
+                  enqueueSnackbar("Portfolio loaded.", { variant: "success" });
                 }}
                 onUpgrade={() => setShowUpgradeModal(true)}
               />
@@ -320,14 +319,6 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Status bar */}
-      <div
-        className="rounded-2xl border border-line bg-panel px-4 py-3 text-muted text-sm mb-4"
-        style={{ boxShadow: "var(--shadow)" }}
-      >
-        {statusMsg}
-      </div>
-
       {/* Stats cards */}
       <PortfolioStats
         portfolio={portfolio}
@@ -349,7 +340,6 @@ function Dashboard() {
               loadPortfolio();
               loadProfiles();
             }}
-            onStatus={(msg) => setStatusMsg(msg)}
             onUpgradeRequired={() => setShowUpgradeModal(true)}
           />
 
