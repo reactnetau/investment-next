@@ -167,6 +167,7 @@ export async function getAudUsdRate(): Promise<number> {
 
 /**
  * Refresh all cached prices from Yahoo. Called by the cron job.
+ * Updates the Price cache and writes currentPrice back to every Holding.
  */
 export async function refreshAllCachedPrices(): Promise<{ updated: number; failed: number }> {
   const entries = await db.price.findMany();
@@ -214,7 +215,13 @@ export async function refreshAllCachedPrices(): Promise<{ updated: number; faile
           })() ?? await fetchLivePrice(code);
 
       if (result !== null) {
-        await db.price.update({ where: { code }, data: { price: result.price, currency: result.currency } });
+        await Promise.all([
+          db.price.update({ where: { code }, data: { price: result.price, currency: result.currency } }),
+          db.holding.updateMany({
+            where: { code: normalized },
+            data: { currentPrice: result.price, priceCurrency: result.currency },
+          }),
+        ]);
         updated++;
       } else {
         failed++;
