@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { Holding } from "@prisma/client";
 import { formatMoney, convertAmount } from "@/lib/currency";
 import type { Currency } from "@/lib/currency";
@@ -38,6 +39,13 @@ interface Props {
 
 export function HoldingsTable({ holdings, onSell, selling, currency, fxRate }: Props) {
   const fmt = (n: number) => formatMoney(n, currency);
+
+  // Tick every 30s so timeAgo labels stay current after a price refresh
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   if (holdings.length === 0) {
     return (

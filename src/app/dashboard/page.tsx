@@ -380,7 +380,7 @@ function Dashboard() {
               >
                 {refreshingPrices ? "Updating…" : "Update Live Prices"}
               </button>
-              <PriceCountdown nextRefresh={portfolio.nextPriceRefresh} />
+              <PriceCountdown nextRefresh={portfolio.nextPriceRefresh} onRefreshDue={loadPortfolio} />
               {isFree && (
                 <span className="text-xs text-muted">{portfolio.holdings.length} / {FREE_HOLDING_LIMIT} stocks</span>
               )}
