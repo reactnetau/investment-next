@@ -340,6 +340,7 @@ function Dashboard() {
           <h2 className="text-base font-bold text-ink mb-4">Add Investment</h2>
 
           <AddHoldingForm
+            key={portfolio.id}
             onAdded={() => {
               loadPortfolio();
               loadProfiles();

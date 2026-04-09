@@ -109,11 +109,14 @@ export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
           Stock Code{exchange ? ` (${exchange})` : ""}
           <input
             className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
-            placeholder="BHP"
+            placeholder="BHP, AAPL, RELIANCE.NS, TCS.BO"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             required
           />
+          <span className="text-[11px] text-muted mt-0.5">
+            ASX: <span className="text-ink">BHP</span> &nbsp;·&nbsp; NASDAQ: <span className="text-ink">AAPL</span> &nbsp;·&nbsp; NSE: <span className="text-ink">RELIANCE.NS</span> &nbsp;·&nbsp; BSE: <span className="text-ink">TCS.BO</span>
+          </span>
         </label>
         <button
           type="button"
