@@ -135,6 +135,9 @@ export async function PATCH(req: NextRequest) {
       });
       if (!portfolio) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+      const refreshedAt = new Date();
+      const refreshedCodes = new Set<string>();
+
       await Promise.all(
         portfolio.holdings.map(async (h) => {
           try {
@@ -151,6 +154,7 @@ export async function PATCH(req: NextRequest) {
                   data: { currentPrice: result.price, priceCurrency: result.currency },
                 }),
               ]);
+              refreshedCodes.add(h.code);
             }
           } catch {
             // Skip this holding if it fails — don't let one failure abort the rest
@@ -170,7 +174,12 @@ export async function PATCH(req: NextRequest) {
       const codes = [...new Set(updated.holdings.map((h) => h.code))];
       const prices = await db.price.findMany({ where: { code: { in: codes } } });
       const priceMap = Object.fromEntries(prices.map((p) => [p.code, p.updatedAt]));
-      const holdingsWithAge = updated.holdings.map((h) => ({ ...h, priceUpdatedAt: priceMap[h.code] ?? null }));
+      // Use the exact refresh timestamp for codes that were successfully updated,
+      // so the "X ago" label always reflects the actual refresh rather than a stale DB timestamp.
+      const holdingsWithAge = updated.holdings.map((h) => ({
+        ...h,
+        priceUpdatedAt: refreshedCodes.has(h.code) ? refreshedAt : (priceMap[h.code] ?? null),
+      }));
 
       const nextPriceRefresh = prices.length > 0 ? getNextDailyUtcRefresh(7, 0) : null;
 
