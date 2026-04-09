@@ -113,10 +113,9 @@ export default function SupportPage() {
                 Your Email
                 <input
                   type="email"
-                  className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
-                  placeholder="you@example.com"
+                  className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-60 disabled:cursor-not-allowed"
                   value={fromEmail}
-                  onChange={(e) => setFromEmail(e.target.value)}
+                  disabled
                   required
                 />
               </label>
