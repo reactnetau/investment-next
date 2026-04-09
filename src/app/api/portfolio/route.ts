@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getAudUsdRate, fetchLivePrice } from "@/lib/price";
+import { getAudUsdRate, getUsdInrRate, fetchLivePrice } from "@/lib/price";
+import { startingCashForCurrency } from "@/lib/currency";
+import type { Currency } from "@/lib/currency";
 import { stripe } from "@/lib/stripe";
 import { getSession, getUserId } from "@/lib/session";
 import { getActivePortfolioId } from "@/lib/profile";
@@ -66,11 +68,12 @@ export async function GET() {
       }
     }
 
-    // Attach price cache timestamps and FX rate
+    // Attach price cache timestamps and FX rates
     const codes = [...new Set(portfolio.holdings.map((h) => h.code))];
-    const [prices, fxRate] = await Promise.all([
+    const [prices, fxRate, usdInrRate] = await Promise.all([
       db.price.findMany({ where: { code: { in: codes } } }),
       getAudUsdRate(),
+      getUsdInrRate(),
     ]);
     const priceMap = Object.fromEntries(prices.map((p) => [p.code, p.updatedAt]));
 
@@ -88,6 +91,7 @@ export async function GET() {
       plan: user?.plan ?? "free",
       currency: portfolio.currency ?? "aud",
       fxRate,
+      usdInrRate,
       nextPriceRefresh,
     });
   } catch (e) {
@@ -108,11 +112,13 @@ export async function PATCH(req: NextRequest) {
   const { action } = await req.json();
 
   if (action === "reset") {
+    const existing = await db.portfolio.findUnique({ where: { id: portfolioId }, select: { currency: true } });
+    const resetCash = startingCashForCurrency((existing?.currency ?? "aud") as Currency);
     const portfolio = await db.portfolio.update({
       where: { id: portfolioId },
       data: {
-        cash: 10000,
-        startingCash: 10000,
+        cash: resetCash,
+        startingCash: resetCash,
         currentDay: new Date(),
         holdings: { deleteMany: {} },
       },
@@ -153,10 +159,11 @@ export async function PATCH(req: NextRequest) {
       );
 
       // Return full enriched response (same shape as GET)
-      const [updated, user, fxRate] = await Promise.all([
+      const [updated, user, fxRate, usdInrRate] = await Promise.all([
         db.portfolio.findUnique({ where: { id: portfolioId }, include: { holdings: { orderBy: { createdAt: "asc" } } } }),
         db.user.findUnique({ where: { id: userId }, select: { plan: true } }),
         getAudUsdRate(),
+        getUsdInrRate(),
       ]);
       if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -173,6 +180,7 @@ export async function PATCH(req: NextRequest) {
         plan: user?.plan ?? "free",
         currency: updated.currency ?? "aud",
         fxRate,
+        usdInrRate,
         nextPriceRefresh,
       });
     } catch (e) {

@@ -35,9 +35,10 @@ interface Props {
   selling: string | null;
   currency: Currency;
   fxRate: number;
+  usdInrRate: number;
 }
 
-export function HoldingsTable({ holdings, onSell, selling, currency, fxRate }: Props) {
+export function HoldingsTable({ holdings, onSell, selling, currency, fxRate, usdInrRate }: Props) {
   const fmt = (n: number) => formatMoney(n, currency);
 
   // Tick every 30s so timeAgo labels stay current after a price refresh
@@ -72,8 +73,8 @@ export function HoldingsTable({ holdings, onSell, selling, currency, fxRate }: P
             const nativeBuy = h.buyPrice;
 
             // Convert to display currency
-            const displayPrice = convertAmount(nativePrice, pc, currency, fxRate);
-            const displayBuy = convertAmount(nativeBuy, pc, currency, fxRate);
+            const displayPrice = convertAmount(nativePrice, pc, currency, fxRate, usdInrRate);
+            const displayBuy = convertAmount(nativeBuy, pc, currency, fxRate, usdInrRate);
             const currentValue = displayPrice * h.quantity;
             const invested = displayBuy * h.quantity;
             const pl = currentValue - invested;
@@ -86,7 +87,7 @@ export function HoldingsTable({ holdings, onSell, selling, currency, fxRate }: P
                   <div className="font-semibold text-ink">{h.code}</div>
                 </td>
                 <td className="px-3 py-3 text-center text-muted">
-                  {pc === "aud" ? "ASX" : "NASDAQ"}
+                  {pc === "aud" ? "ASX" : pc === "inr" ? (h.code.toUpperCase().endsWith(".BO") ? "BSE" : "NSE") : "NASDAQ"}
                 </td>
                 <td className="px-3 py-3 text-center">{fmt(displayBuy)}</td>
                 <td className="px-3 py-3 text-center">

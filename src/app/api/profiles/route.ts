@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSession, getUserId } from "@/lib/session";
 import { FREE_PROFILE_LIMIT } from "@/lib/plans";
+import { startingCashForCurrency } from "@/lib/currency";
+import type { Currency } from "@/lib/currency";
 
 /** GET /api/profiles — list all profiles for the signed-in user */
 export async function GET() {
@@ -60,14 +62,15 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const portfolioCurrency = currency === "usd" ? "usd" : "aud";
+  const portfolioCurrency: Currency = currency === "usd" ? "usd" : currency === "inr" ? "inr" : "aud";
+  const startingCash = startingCashForCurrency(portfolioCurrency);
 
   const portfolio = await db.portfolio.create({
     data: {
       userId,
       name: name.trim(),
-      cash: 10000,
-      startingCash: 10000,
+      cash: startingCash,
+      startingCash,
       currency: portfolioCurrency,
       currentDay: new Date(),
     },

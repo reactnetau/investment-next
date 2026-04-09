@@ -7,7 +7,7 @@ import Link from "next/link";
 import { currencyFromTimezone } from "@/lib/currency";
 
 const FEATURES = [
-  { label: "Live ASX & NASDAQ prices", sub: "Real market data updated daily" },
+  { label: "Live ASX, NASDAQ, NSE & BSE prices", sub: "Real market data updated daily" },
   { label: "Track profit & loss", sub: "See performance across all your holdings" },
   { label: "Multiple portfolios", sub: "Test different strategies side-by-side" },
   { label: "No real money needed", sub: "Start with $10,000 in simulated cash" },

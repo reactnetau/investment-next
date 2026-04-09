@@ -10,7 +10,7 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Investors Playground is free to start. The free plan includes live ASX and NASDAQ prices, portfolio tracking, and up to 5 stock holdings. Upgrade to Pro with a single one-off payment for unlimited holdings.",
+    "Investors Playground is free to start. The free plan includes live ASX, NASDAQ, NSE and BSE prices, portfolio tracking, and up to 5 stock holdings. Upgrade to Pro with a single one-off payment for unlimited holdings.",
   alternates: { canonical: `${siteUrl}/pricing` },
   openGraph: {
     title: "Pricing — Investors Playground",
@@ -24,21 +24,21 @@ export const metadata: Metadata = {
 const FREE_FEATURES = [
   "Up to 5 stock holdings",
   "1 portfolio",
-  "Live ASX & NASDAQ prices",
+  "Live ASX, NASDAQ, NSE & BSE prices",
   "Profit & loss tracking",
   "Buy and sell simulation",
   "Portfolio reset",
-  "AUD & USD support",
+  "AUD, USD & INR support",
 ];
 
 const PRO_FEATURES = [
   "Unlimited stock holdings",
   "Unlimited portfolios",
-  "Live ASX & NASDAQ prices",
+  "Live ASX, NASDAQ, NSE & BSE prices",
   "Profit & loss tracking",
   "Buy and sell simulation",
   "Portfolio reset",
-  "AUD & USD support",
+  "AUD, USD & INR support",
   "One-off payment — no subscription",
 ];
 
@@ -174,12 +174,12 @@ export default async function PricingPage() {
                 {[
                   ["Stock holdings", "Up to 5", "Unlimited"],
                   ["Portfolios", "1", "Unlimited"],
-                  ["Live ASX prices", "✓", "✓"],
-                  ["Live NASDAQ prices", "✓", "✓"],
+                  ["Live ASX & NASDAQ prices", "✓", "✓"],
+                  ["Live NSE & BSE prices", "✓", "✓"],
                   ["Profit & loss tracking", "✓", "✓"],
                   ["Buy & sell simulation", "✓", "✓"],
                   ["Portfolio reset", "✓", "✓"],
-                  ["AUD & USD support", "✓", "✓"],
+                  ["AUD, USD & INR support", "✓", "✓"],
                   ["Price", "Free", "$5 AUD once"],
                 ].map(([feature, free, pro]) => (
                   <tr key={feature} className="hover:bg-[#faf7f2] transition-colors">

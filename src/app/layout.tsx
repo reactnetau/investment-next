@@ -9,31 +9,36 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Investors Playground — Practice Investing with Live ASX & NASDAQ Prices",
+    default: "Investors Playground — Practice Investing with Live ASX, NASDAQ, NSE & BSE Prices",
     template: "%s — Investors Playground",
   },
   description:
-    "Build investing confidence before you risk real money. Practice with live ASX and NASDAQ prices, track your portfolio, and learn the markets risk-free.",
+    "Build investing confidence before you risk real money. Practice with live ASX, NASDAQ, NSE and BSE prices, track your portfolio, and learn the markets risk-free.",
   keywords: [
     "investment simulator",
     "stock market simulator",
     "ASX simulator",
     "NASDAQ simulator",
+    "NSE simulator",
+    "BSE simulator",
+    "Indian stock market simulator",
     "practice investing",
     "portfolio tracker",
     "learn investing",
     "risk-free investing",
     "stock trading simulator",
     "ASX stocks",
+    "NSE stocks",
+    "BSE stocks",
     "paper trading",
   ],
   authors: [{ name: "Investors Playground" }],
   creator: "Investors Playground",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Investors Playground — Practice Investing with Live ASX & NASDAQ Prices",
+    title: "Investors Playground — Practice Investing with Live ASX, NASDAQ, NSE & BSE Prices",
     description:
-      "Build investing confidence before you risk real money. Practice with live ASX and NASDAQ prices, track your portfolio, and learn the markets risk-free.",
+      "Build investing confidence before you risk real money. Practice with live ASX, NASDAQ, NSE and BSE prices, track your portfolio, and learn the markets risk-free.",
     url: siteUrl,
     siteName: "Investors Playground",
     images: [
@@ -49,9 +54,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Investors Playground — Practice Investing with Live ASX & NASDAQ Prices",
+    title: "Investors Playground — Practice Investing with Live ASX, NASDAQ, NSE & BSE Prices",
     description:
-      "Build investing confidence before you risk real money. Practice with live ASX and NASDAQ prices, track your portfolio, and learn the markets risk-free.",
+      "Build investing confidence before you risk real money. Practice with live ASX, NASDAQ, NSE and BSE prices, track your portfolio, and learn the markets risk-free.",
     images: ["/twitter-image"],
   },
 };

@@ -11,7 +11,7 @@ interface Props {
 
 export function AddProfileModal({ onCreated, onClose, onUpgradeRequired }: Props) {
   const [name, setName] = useState("");
-  const [currency, setCurrency] = useState<"aud" | "usd">(currencyFromTimezone() as "aud" | "usd");
+  const [currency, setCurrency] = useState<"aud" | "usd" | "inr">(currencyFromTimezone());
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -79,15 +79,16 @@ export function AddProfileModal({ onCreated, onClose, onUpgradeRequired }: Props
             <select
               className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
               value={currency}
-              onChange={(e) => setCurrency(e.target.value as "aud" | "usd")}
+              onChange={(e) => setCurrency(e.target.value as "aud" | "usd" | "inr")}
             >
               <option value="aud">AUD</option>
               <option value="usd">USD</option>
+              <option value="inr">INR</option>
             </select>
           </label>
 
           <p className="text-xs text-muted">
-            Starts with {currency.toUpperCase()} $10,000 in cash. You can switch between portfolios at any time.
+            Starts with {currency === "inr" ? "₹8,00,000" : "$10,000"} {currency.toUpperCase()} in cash. You can switch between portfolios at any time.
           </p>
 
           <div className="flex gap-3 pt-1">

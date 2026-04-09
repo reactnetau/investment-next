@@ -8,7 +8,7 @@ const TOPICS_LOGGED_IN = [
   "Select a topic…",
   "A stock price isn't updating",
   "I was charged but my account isn't upgraded",
-  "I can't find a stock (ASX or NASDAQ)",
+  "I can't find a stock (ASX, NASDAQ, NSE or BSE)",
   "I want a refund",
   "I found a bug",
   "Other",

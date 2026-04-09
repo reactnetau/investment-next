@@ -9,14 +9,14 @@ import { MarketingNav, MarketingFooter } from "@/components/MarketingNav";
 const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
-  title: "Investors Playground — Practice Investing with Live ASX & NASDAQ Prices",
+  title: "Investors Playground — Practice Investing with Live ASX, NASDAQ, NSE & BSE Prices",
   description:
-    "Build investing confidence before you risk real money. Practice with live ASX and NASDAQ prices, track your portfolio performance, and learn the markets completely risk-free.",
+    "Build investing confidence before you risk real money. Practice with live ASX, NASDAQ, NSE and BSE prices, track your portfolio performance, and learn the markets completely risk-free.",
   alternates: { canonical: siteUrl },
   openGraph: {
-    title: "Investors Playground — Practice Investing with Live ASX & NASDAQ Prices",
+    title: "Investors Playground — Practice Investing with Live ASX, NASDAQ, NSE & BSE Prices",
     description:
-      "Build investing confidence before you risk real money. Practice with live ASX and NASDAQ prices, track your portfolio performance, and learn the markets completely risk-free.",
+      "Build investing confidence before you risk real money. Practice with live ASX, NASDAQ, NSE and BSE prices, track your portfolio performance, and learn the markets completely risk-free.",
     url: siteUrl,
     type: "website",
   },
@@ -28,7 +28,7 @@ const jsonLd = {
   name: "Investors Playground",
   url: siteUrl,
   description:
-    "A risk-free investment simulator that uses live ASX and NASDAQ prices. Practice buying and selling stocks, track your portfolio performance, and build investing confidence without risking real money.",
+    "A risk-free investment simulator that uses live ASX, NASDAQ, NSE and BSE prices. Practice buying and selling stocks, track your portfolio performance, and build investing confidence without risking real money.",
   applicationCategory: "FinanceApplication",
   operatingSystem: "Web",
   browserRequirements: "Requires JavaScript",
@@ -51,6 +51,8 @@ const jsonLd = {
   featureList: [
     "Live ASX stock prices",
     "Live NASDAQ stock prices",
+    "Live NSE stock prices",
+    "Live BSE stock prices",
     "Portfolio tracking",
     "Profit and loss tracking",
     "Multiple portfolios",
@@ -60,9 +62,9 @@ const jsonLd = {
 
 const FEATURES = [
   {
-    title: "Live ASX & NASDAQ Prices",
+    title: "Live ASX, NASDAQ, NSE & BSE Prices",
     description:
-      "Buy and sell real stocks using live market data from the Australian Securities Exchange and NASDAQ. Prices update daily so your simulation reflects real market conditions.",
+      "Buy and sell real stocks using live market data from the ASX, NASDAQ, NSE and BSE. Prices update daily so your simulation reflects real market conditions.",
   },
   {
     title: "Portfolio Tracking",
@@ -83,7 +85,7 @@ const FEATURES = [
 
 const STEPS = [
   { step: "1", title: "Create a free account", body: "Sign up in seconds. No credit card required." },
-  { step: "2", title: "Add stocks", body: "Search any ASX or NASDAQ ticker. Live prices are fetched automatically." },
+  { step: "2", title: "Add stocks", body: "Search any ASX, NASDAQ, NSE or BSE ticker. Live prices are fetched automatically." },
   { step: "3", title: "Track your performance", body: "Watch your portfolio grow (or learn from the dips) in real time." },
 ];
 
@@ -104,13 +106,13 @@ export default async function HomePage() {
         {/* Hero */}
         <section className="flex-1 flex flex-col items-center justify-center text-center px-6 py-20 max-w-4xl mx-auto w-full">
           <div className="inline-flex items-center gap-2 rounded-full border border-line bg-panel px-4 py-1.5 text-xs font-semibold text-accent mb-8">
-            Live ASX &amp; NASDAQ prices
+            Live ASX, NASDAQ, NSE &amp; BSE prices
           </div>
           <h1 className="text-5xl sm:text-6xl font-extrabold text-ink leading-tight tracking-tight mb-6">
             Build investing confidence<br className="hidden sm:block" /> before you risk real money.
           </h1>
           <p className="text-lg text-muted max-w-2xl mb-10 leading-relaxed">
-            Investors Playground is a free stock market simulator. Practice buying and selling real ASX and NASDAQ stocks using live prices, track your portfolio, and learn the markets — completely risk-free.
+            Investors Playground is a free stock market simulator. Practice buying and selling real stocks from the ASX, NASDAQ, NSE and BSE using live prices, track your portfolio, and learn the markets — completely risk-free.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link

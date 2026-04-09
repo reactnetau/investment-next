@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchLivePrice, getAudUsdRate } from "@/lib/price";
+import { fetchLivePrice, getAudUsdRate, getUsdInrRate } from "@/lib/price";
 import { convertAmount } from "@/lib/currency";
 import { db } from "@/lib/db";
 import { getSession, getUserId } from "@/lib/session";
@@ -36,8 +36,8 @@ export async function GET(req: NextRequest) {
   // If stock's native currency differs from portfolio currency, return a converted price for display
   let convertedPrice: number | null = null;
   if (price.currency !== portfolioCurrency) {
-    const fxRate = await getAudUsdRate();
-    convertedPrice = convertAmount(price.price, price.currency, portfolioCurrency, fxRate);
+    const [fxRate, usdInrRate] = await Promise.all([getAudUsdRate(), getUsdInrRate()]);
+    convertedPrice = convertAmount(price.price, price.currency, portfolioCurrency, fxRate, usdInrRate);
   }
 
   return NextResponse.json({ price, convertedPrice, portfolioCurrency });

@@ -39,20 +39,21 @@ interface Props {
   portfolio: PortfolioWithHoldings;
   currency: Currency;
   fxRate: number;
+  usdInrRate: number;
 }
 
-export function PortfolioStats({ portfolio, currency, fxRate }: Props) {
+export function PortfolioStats({ portfolio, currency, fxRate, usdInrRate }: Props) {
   const fmt = (n: number) => formatMoney(n, currency);
 
   const totalInvested = portfolio.holdings.reduce((s, h) => {
     const pc = (h.priceCurrency ?? "aud") as Currency;
-    return s + convertAmount(h.buyPrice * h.quantity, pc, currency, fxRate);
+    return s + convertAmount(h.buyPrice * h.quantity, pc, currency, fxRate, usdInrRate);
   }, 0);
 
   const totalValue = portfolio.holdings.reduce((s, h) => {
     const pc = (h.priceCurrency ?? "aud") as Currency;
     const price = h.currentPrice ?? h.buyPrice;
-    return s + convertAmount(price * h.quantity, pc, currency, fxRate);
+    return s + convertAmount(price * h.quantity, pc, currency, fxRate, usdInrRate);
   }, 0);
 
   const totalProfit = totalValue - totalInvested;

@@ -8,12 +8,12 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "Learn how Investors Playground works. Create a free account, add ASX and NASDAQ stocks with live prices, track your portfolio, and build investing confidence — risk-free.",
+    "Learn how Investors Playground works. Create a free account, add ASX, NASDAQ, NSE and BSE stocks with live prices, track your portfolio, and build investing confidence — risk-free.",
   alternates: { canonical: `${siteUrl}/how-it-works` },
   openGraph: {
     title: "How Investors Playground Works",
     description:
-      "A step-by-step guide to practising investing with live ASX and NASDAQ prices. No real money required.",
+      "A step-by-step guide to practising investing with live ASX, NASDAQ, NSE and BSE prices. No real money required.",
     url: `${siteUrl}/how-it-works`,
     type: "article",
   },
@@ -28,7 +28,7 @@ const STEPS = [
   {
     n: "02",
     title: "Add stocks to your portfolio",
-    body: 'Enter any ASX ticker (e.g. BHP, CBA, WES) or NASDAQ/NYSE ticker (e.g. AAPL, MSFT, TSLA) and click "Fetch Price" to pull the current live price. You can also enter a manual buy-in price if you want to backtest a historical entry point.',
+    body: 'Enter any ASX ticker (e.g. BHP, CBA, WES), NASDAQ/NYSE ticker (e.g. AAPL, MSFT, TSLA), or Indian stock with its exchange suffix (e.g. RELIANCE.NS for NSE, TCS.BO for BSE) and click "Fetch Price" to pull the current live price. You can also enter a manual buy-in price if you want to backtest a historical entry point.',
   },
   {
     n: "03",
@@ -43,7 +43,7 @@ const STEPS = [
   {
     n: "05",
     title: "Track your performance",
-    body: "Your dashboard shows every holding's buy price, current price, percentage change, days held, amount invested, current value, and profit or loss — all in your local currency (AUD or USD).",
+    body: "Your dashboard shows every holding's buy price, current price, percentage change, days held, amount invested, current value, and profit or loss — all in your local currency (AUD, USD or INR).",
   },
   {
     n: "06",
@@ -59,11 +59,11 @@ const FAQS = [
   },
   {
     q: "Where do the prices come from?",
-    a: "Prices are sourced from Yahoo Finance, which aggregates real market data from the ASX and NASDAQ. They are updated daily via an automated process.",
+    a: "Prices are sourced from Yahoo Finance, which aggregates real market data from the ASX, NASDAQ, NSE and BSE. They are updated daily via an automated process.",
   },
   {
-    q: "Can I trade both ASX and NASDAQ stocks?",
-    a: "Yes. Simply enter the ticker code. ASX stocks are typically 3 letters (BHP, CBA, NAB). NASDAQ and NYSE stocks use their standard US ticker codes (AAPL, GOOGL, AMZN). The simulator automatically detects the exchange and converts currency where needed.",
+    q: "Which exchanges are supported?",
+    a: "ASX, NASDAQ, NYSE, NSE and BSE are all supported. ASX tickers are typically 3 letters (BHP, CBA, NAB). NASDAQ/NYSE use standard US codes (AAPL, GOOGL, AMZN). For Indian stocks, append the exchange suffix: .NS for NSE (e.g. RELIANCE.NS) or .BO for BSE (e.g. TCS.BO). Currency conversion is handled automatically.",
   },
   {
     q: "What is the difference between the free and Pro plans?",
@@ -114,9 +114,9 @@ export default function HowItWorksPage() {
           <h2 className="text-xl font-extrabold text-ink mb-6">What you get</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              ["$10,000 starting cash", "Every account starts with simulated cash to invest."],
-              ["Live ASX & NASDAQ prices", "Real market data from Yahoo Finance, updated daily."],
-              ["AUD & USD support", "Prices automatically converted to your portfolio currency."],
+              ["Simulated starting cash", "Every account starts with simulated cash to invest (₹8,00,000 for INR portfolios, $10,000 for AUD/USD)."],
+              ["Live ASX, NASDAQ, NSE & BSE prices", "Real market data from Yahoo Finance, updated daily."],
+              ["AUD, USD & INR support", "Prices automatically converted to your portfolio currency."],
               ["Profit & loss tracking", "See exactly how each holding is performing."],
               ["Sell anytime", "Liquidate any position instantly at the current market price."],
               ["Portfolio reset", "Restart from scratch at any time — no consequences."],

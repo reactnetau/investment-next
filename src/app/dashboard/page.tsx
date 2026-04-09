@@ -26,6 +26,7 @@ type PortfolioWithHoldings = Portfolio & {
   plan: string;
   currency: string;
   fxRate: number;
+  usdInrRate: number;
   nextPriceRefresh: string | null;
 };
 
@@ -165,7 +166,8 @@ function Dashboard() {
     if (!res.ok) return;
     const data = await res.json();
     setPortfolio(data);
-    enqueueSnackbar("Portfolio reset. Starting cash: $10,000.00.", { variant: "success" });
+    const resetAmount = formatMoney(data.cash, (data.currency ?? "aud") as "aud" | "usd" | "inr");
+    enqueueSnackbar(`Portfolio reset. Starting cash: ${resetAmount}.`, { variant: "success" });
     loadProfiles();
   }
 
@@ -255,8 +257,9 @@ function Dashboard() {
           onConfirm={confirmSell}
           onClose={() => setSellTarget(null)}
           selling={selling === sellTarget.id}
-          currency={(portfolio.currency ?? "aud") as "aud" | "usd"}
+          currency={(portfolio.currency ?? "aud") as "aud" | "usd" | "inr"}
           fxRate={portfolio.fxRate ?? 0.65}
+          usdInrRate={portfolio.usdInrRate ?? 83}
         />
       )}
 
@@ -274,7 +277,7 @@ function Dashboard() {
             )}
           </div>
           <div className="text-muted text-sm mt-1">
-            Add stocks, refresh live prices from the internet, and track your total portfolio change. Supports ASX and NASDAQ.
+            Add stocks, refresh live prices from the internet, and track your total portfolio change. Supports ASX, NASDAQ, NSE and BSE.
           </div>
           {profiles.length > 0 && (
             <div className="mt-3">
@@ -322,8 +325,9 @@ function Dashboard() {
       {/* Stats cards */}
       <PortfolioStats
         portfolio={portfolio}
-        currency={(portfolio.currency ?? "aud") as "aud" | "usd"}
+        currency={(portfolio.currency ?? "aud") as "aud" | "usd" | "inr"}
         fxRate={portfolio.fxRate ?? 0.65}
+        usdInrRate={portfolio.usdInrRate ?? 83}
       />
 
       {/* Main layout */}
@@ -356,7 +360,7 @@ function Dashboard() {
           </div>
 
           <p className="mt-4 text-xs text-muted leading-relaxed">
-            Starting cash is {formatMoney(10000, (portfolio.currency ?? "aud") as "aud" | "usd")}. Enter an ASX code (e.g. BHP) or NASDAQ/NYSE code (e.g. META, AAPL).
+            Starting cash is {formatMoney(portfolio.currency === "inr" ? 800000 : 10000, (portfolio.currency ?? "aud") as "aud" | "usd" | "inr")}. Enter an ASX code (e.g. BHP), NASDAQ/NYSE code (e.g. META, AAPL), or Indian stock with suffix (e.g. RELIANCE.NS, TCS.BO).
             Leave the buy-in price blank to use the live price. All values shown in {(portfolio.currency ?? "AUD").toUpperCase()}.
             {isFree && (
               <span className="block mt-1">Free accounts can hold up to {FREE_HOLDING_LIMIT} stocks. <button onClick={() => setShowUpgradeModal(true)} className="text-accent underline">Unlock unlimited with a one-off payment</button>.</span>
@@ -390,8 +394,9 @@ function Dashboard() {
             holdings={portfolio.holdings}
             onSell={(holding) => setSellTarget(holding)}
             selling={selling}
-            currency={(portfolio.currency ?? "aud") as "aud" | "usd"}
+            currency={(portfolio.currency ?? "aud") as "aud" | "usd" | "inr"}
             fxRate={portfolio.fxRate ?? 0.65}
+            usdInrRate={portfolio.usdInrRate ?? 83}
           />
         </div>
       </div>

@@ -22,15 +22,16 @@ interface Props {
   selling: boolean;
   currency: Currency;
   fxRate: number;
+  usdInrRate: number;
 }
 
-export function SellModal({ holding, onConfirm, onClose, selling, currency, fxRate }: Props) {
+export function SellModal({ holding, onConfirm, onClose, selling, currency, fxRate, usdInrRate }: Props) {
   const fmt = (n: number) => formatMoney(n, currency);
   const pc = (holding.priceCurrency ?? "aud") as Currency;
 
   const nativePrice = holding.currentPrice ?? holding.buyPrice;
-  const displayPrice = convertAmount(nativePrice, pc, currency, fxRate);
-  const displayBuy = convertAmount(holding.buyPrice, pc, currency, fxRate);
+  const displayPrice = convertAmount(nativePrice, pc, currency, fxRate, usdInrRate);
+  const displayBuy = convertAmount(holding.buyPrice, pc, currency, fxRate, usdInrRate);
 
   const saleValue = displayPrice * holding.quantity;
   const invested = displayBuy * holding.quantity;

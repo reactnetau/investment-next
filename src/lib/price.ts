@@ -97,10 +97,18 @@ async function fetchSymbol(symbol: string): Promise<number | null> {
   }
 }
 
+function currencyForSuffix(s: string): Currency {
+  if (s.endsWith(".AX")) return "aud";
+  if (s.endsWith(".NS") || s.endsWith(".BO")) return "inr";
+  return "usd";
+}
+
 /**
  * Fetch live price from Yahoo Finance.
  * Returns the price and its native currency.
  * - ASX stocks (.AX) → AUD
+ * - NSE stocks (.NS) → INR
+ * - BSE stocks (.BO) → INR
  * - NASDAQ/NYSE (bare code) → USD
  */
 export async function fetchLivePrice(code: string): Promise<{ price: number; currency: Currency } | null> {
@@ -110,8 +118,7 @@ export async function fetchLivePrice(code: string): Promise<{ price: number; cur
     const quotes = await fetchQuoteMap([s]);
     const price = getQuotePrice(quotes.get(s)) ?? await fetchSymbol(s);
     if (price === null) return null;
-    const currency: Currency = s.endsWith(".AX") ? "aud" : "usd";
-    return { price, currency };
+    return { price, currency: currencyForSuffix(s) };
   }
 
   // Try ASX first (AUD), fall back to NASDAQ/NYSE (USD)
@@ -166,6 +173,26 @@ export async function getAudUsdRate(): Promise<number> {
 }
 
 /**
+ * Get the current USDINR rate from cache. Falls back to Yahoo if not cached.
+ * Returns how many INR per 1 USD (e.g. 83).
+ */
+export async function getUsdInrRate(): Promise<number> {
+  const cached = await db.price.findUnique({ where: { code: "USDINR" } });
+  if (cached) return cached.price;
+
+  const price = await fetchSymbol("USDINR=X");
+  const rate = price ?? 83; // fallback to rough estimate
+
+  await db.price.upsert({
+    where: { code: "USDINR" },
+    update: { price: rate, currency: "usd" },
+    create: { code: "USDINR", price: rate, currency: "usd" },
+  });
+
+  return rate;
+}
+
+/**
  * Refresh all cached prices from Yahoo. Called by the cron job.
  * Updates the Price cache and writes currentPrice back to every Holding.
  */
@@ -174,8 +201,10 @@ export async function refreshAllCachedPrices(): Promise<{ updated: number; faile
   let updated = 0;
   let failed = 0;
 
+  const FX_CODES = new Set(["AUDUSD", "USDINR"]);
+
   const symbolsToFetch = entries.flatMap(({ code }) => {
-    if (code === "AUDUSD") return ["AUDUSD=X"];
+    if (FX_CODES.has(code)) return [`${code}=X`];
 
     const normalized = code.trim().toUpperCase();
     return normalized.includes(".") ? [normalized] : [`${normalized}.AX`, normalized];
@@ -185,8 +214,8 @@ export async function refreshAllCachedPrices(): Promise<{ updated: number; faile
 
   await Promise.all(
     entries.map(async ({ code }) => {
-      if (code === "AUDUSD") {
-        const rate = getQuotePrice(quoteMap.get("AUDUSD=X")) ?? await fetchSymbol("AUDUSD=X");
+      if (FX_CODES.has(code)) {
+        const rate = getQuotePrice(quoteMap.get(`${code}=X`)) ?? await fetchSymbol(`${code}=X`);
         if (rate !== null) {
           await db.price.update({ where: { code }, data: { price: rate } });
           updated++;
@@ -201,8 +230,7 @@ export async function refreshAllCachedPrices(): Promise<{ updated: number; faile
         ? (() => {
             const price = getQuotePrice(quoteMap.get(normalized));
             if (price === null) return null;
-            const currency: Currency = normalized.endsWith(".AX") ? "aud" : "usd";
-            return { price, currency };
+            return { price, currency: currencyForSuffix(normalized) };
           })()
         : (() => {
             const axPrice = getQuotePrice(quoteMap.get(`${normalized}.AX`));

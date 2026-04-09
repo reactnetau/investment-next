@@ -52,7 +52,8 @@ export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
         .replace(/\.?0+$/, "");
       setBuyPrice(formatted);
       setBuyPriceCurrency(displayCurrency);
-      setExchange(nativeCurrency === "aud" ? "ASX" : "NASDAQ");
+      const upperCode = code.trim().toUpperCase();
+      setExchange(nativeCurrency === "aud" ? "ASX" : nativeCurrency === "inr" ? (upperCode.endsWith(".BO") ? "BSE" : "NSE") : "NASDAQ");
       enqueueSnackbar(`Fetched live price for ${code.trim().toUpperCase()}: ${displayCurrency.toUpperCase()} $${displayPrice.toFixed(2)}`, { variant: "success" });
     } catch (err) {
       enqueueSnackbar(`Error fetching price: ${err instanceof Error ? err.message : String(err)}`, { variant: "error" });

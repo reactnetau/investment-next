@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { startingCashForCurrency } from "@/lib/currency";
+import type { Currency } from "@/lib/currency";
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -28,7 +30,8 @@ export async function POST(req: NextRequest) {
 
   const salt = await bcrypt.genSalt(12);
   const passwordHash = await bcrypt.hash(password, salt);
-  const portfolioCurrency = currency === "usd" ? "usd" : "aud";
+  const portfolioCurrency: Currency = currency === "usd" ? "usd" : currency === "inr" ? "inr" : "aud";
+  const startingCash = startingCashForCurrency(portfolioCurrency);
   const name = profileName?.trim() || "My Portfolio";
 
   const user = await db.$transaction(async (tx) => {
@@ -40,8 +43,8 @@ export async function POST(req: NextRequest) {
       data: {
         userId: newUser.id,
         name,
-        cash: 10000,
-        startingCash: 10000,
+        cash: startingCash,
+        startingCash,
         currency: portfolioCurrency,
         currentDay: new Date(),
       },
