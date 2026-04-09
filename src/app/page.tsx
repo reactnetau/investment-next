@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getSiteUrl } from "@/lib/app-url";
-import { MarketingFooter } from "@/components/MarketingNav";
+import { MarketingNav, MarketingFooter } from "@/components/MarketingNav";
 
 const siteUrl = getSiteUrl();
 
@@ -99,34 +99,7 @@ export default async function HomePage() {
       />
 
       <div className="min-h-screen flex flex-col">
-        {/* Nav */}
-        <nav className="border-b border-line bg-panel/80 backdrop-blur-sm">
-          <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
-            <span className="font-bold text-ink tracking-tight">
-              <span className="text-accent">●</span> Investors Playground
-            </span>
-            <div className="hidden md:flex items-center gap-1">
-              {[
-                { href: "/how-it-works", label: "How It Works" },
-                { href: "/pricing", label: "Pricing" },
-                { href: "/paper-trading-guide", label: "Paper Trading" },
-                { href: "/asx-vs-nasdaq", label: "ASX vs NASDAQ" },
-              ].map((l) => (
-                <Link key={l.href} href={l.href} className="px-3 py-1.5 rounded-lg text-sm text-muted hover:text-ink hover:bg-[#f0ece3] transition">
-                  {l.label}
-                </Link>
-              ))}
-            </div>
-            <div className="flex items-center gap-3">
-              <Link href="/login" className="text-sm font-semibold text-ink hover:text-accent transition hidden sm:inline">
-                Sign In
-              </Link>
-              <Link href="/register" className="rounded-xl bg-accent text-white font-bold text-sm px-4 py-2 hover:opacity-90 transition">
-                Get Started Free
-              </Link>
-            </div>
-          </div>
-        </nav>
+        <MarketingNav />
 
         {/* Hero */}
         <section className="flex-1 flex flex-col items-center justify-center text-center px-6 py-20 max-w-4xl mx-auto w-full">

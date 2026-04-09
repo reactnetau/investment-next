@@ -1,6 +1,8 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+"use client";
+
+import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
   { href: "/how-it-works", label: "How It Works" },
@@ -9,31 +11,39 @@ const NAV_LINKS = [
   { href: "/asx-vs-nasdaq", label: "ASX vs NASDAQ" },
 ];
 
-export async function MarketingNav() {
-  const session = await getServerSession(authOptions);
+export function MarketingNav() {
+  const { data: session } = useSession();
+  const pathname = usePathname();
   const isLoggedIn = !!session?.user;
 
   return (
-    <nav className="border-b border-line bg-panel/80 backdrop-blur-sm sticky top-0 z-40">
+    <nav className="border-b border-line bg-panel/90 backdrop-blur-sm sticky top-0 z-40">
       <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2 shrink-0 font-bold text-ink tracking-tight">
-          <span className="text-accent">●</span>
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2 shrink-0 font-bold text-ink tracking-tight hover:opacity-80 transition">
+          <span className="text-accent text-lg">●</span>
           <span className="hidden sm:inline">Investors Playground</span>
-          <span className="sm:hidden">IP</span>
+          <span className="sm:hidden font-bold text-ink">IP</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-1">
+        {/* Page links */}
+        <div className="hidden md:flex items-center gap-0.5">
           {NAV_LINKS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="px-3 py-1.5 rounded-lg text-sm text-muted hover:text-ink hover:bg-[#f0ece3] transition"
+              className={`px-3 py-1.5 rounded-lg text-sm transition ${
+                pathname === l.href
+                  ? "bg-[#f0ece3] text-ink font-semibold"
+                  : "text-muted hover:text-ink hover:bg-[#f0ece3]"
+              }`}
             >
               {l.label}
             </Link>
           ))}
         </div>
 
+        {/* Auth buttons */}
         <div className="flex items-center gap-2 shrink-0">
           {isLoggedIn ? (
             <Link
@@ -44,7 +54,10 @@ export async function MarketingNav() {
             </Link>
           ) : (
             <>
-              <Link href="/login" className="text-sm font-semibold text-ink hover:text-accent transition hidden sm:inline">
+              <Link
+                href="/login"
+                className="text-sm font-semibold text-ink hover:text-accent transition hidden sm:inline"
+              >
                 Sign In
               </Link>
               <Link
@@ -74,7 +87,7 @@ export function MarketingFooter() {
               A risk-free stock market simulator using live ASX and NASDAQ prices.
             </p>
           </div>
-          <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
+          <div className="flex flex-wrap gap-x-8 gap-y-2">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-semibold text-ink uppercase tracking-wide mb-1">Learn</span>
               <Link href="/how-it-works" className="text-muted hover:text-accent transition text-sm">How It Works</Link>
