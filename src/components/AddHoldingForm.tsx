@@ -8,53 +8,69 @@ interface Props {
   onUpgradeRequired: () => void;
 }
 
+type Market = "ASX" | "NASDAQ" | "NSE" | "BSE";
+
+const MARKET_OPTIONS: { value: Market; label: string; placeholder: string }[] = [
+  { value: "ASX",    label: "ASX (Australia)",   placeholder: "BHP, CBA, WES" },
+  { value: "NASDAQ", label: "NASDAQ / NYSE (US)", placeholder: "AAPL, MSFT, TSLA" },
+  { value: "NSE",    label: "NSE (India)",        placeholder: "RELIANCE, TCS" },
+  { value: "BSE",    label: "BSE (India)",        placeholder: "RELIANCE, TCS" },
+];
+
+function normalizeCodeForMarket(rawCode: string, market: Market): string {
+  const s = rawCode.trim().toUpperCase();
+  // Already has an exchange suffix — use as-is
+  if (s.includes(".")) return s;
+  if (market === "ASX") return `${s}.AX`;
+  if (market === "NSE") return `${s}.NS`;
+  if (market === "BSE") return `${s}.BO`;
+  return s; // NASDAQ/NYSE — bare code
+}
+
 export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
   const { enqueueSnackbar } = useSnackbar();
+  const [market, setMarket] = useState<Market>("ASX");
   const [code, setCode] = useState("");
   const [buyPrice, setBuyPrice] = useState("");
   const [quantity, setQuantity] = useState("");
   const [amountAud, setAmountAud] = useState("");
   const [buyPriceCurrency, setBuyPriceCurrency] = useState<string>("");
-  const [exchange, setExchange] = useState<string>("");
   const [fetchingPrice, setFetchingPrice] = useState(false);
   const [adding, setAdding] = useState(false);
+
+  const selectedMarket = MARKET_OPTIONS.find((m) => m.value === market)!;
 
   async function fetchPrice() {
     if (!code.trim()) {
       enqueueSnackbar("Enter a stock code before fetching a live price.", { variant: "warning" });
       return;
     }
+    const normalizedCode = normalizeCodeForMarket(code, market);
     setFetchingPrice(true);
-    enqueueSnackbar(`Fetching live price for ${code.trim().toUpperCase()}…`, { variant: "info" });
+    enqueueSnackbar(`Fetching live price for ${normalizedCode}…`, { variant: "info" });
 
     try {
-      const res = await fetch(`/api/price?code=${encodeURIComponent(code.trim())}`);
+      const res = await fetch(`/api/price?code=${encodeURIComponent(normalizedCode)}`);
       const data = await res.json();
       if (!res.ok) {
-        enqueueSnackbar(data?.error || `Could not fetch a live price for ${code.trim().toUpperCase()} right now.`, { variant: "error" });
+        enqueueSnackbar(data?.error || `Could not fetch a live price for ${normalizedCode} right now.`, { variant: "error" });
         return;
       }
-      // Always expect { price: { price: number, currency: string }, convertedPrice?: number, portfolioCurrency?: string }
       const priceObj = data.price;
       const livePrice = priceObj?.price;
       const nativeCurrency: string = priceObj?.currency || "";
       if (typeof livePrice !== "number" || isNaN(livePrice) || !isFinite(livePrice)) {
-        enqueueSnackbar(`Could not fetch a valid price for ${code.trim().toUpperCase()}.`, { variant: "error" });
+        enqueueSnackbar(`Could not fetch a valid price for ${normalizedCode}.`, { variant: "error" });
         return;
       }
-      // If stock is in a different currency to the portfolio, show and use the converted price
       const convertedPrice: number | null = data.convertedPrice ?? null;
       const portfolioCurrency: string = data.portfolioCurrency || nativeCurrency;
       const displayPrice = convertedPrice !== null ? convertedPrice : livePrice;
       const displayCurrency = convertedPrice !== null ? portfolioCurrency : nativeCurrency;
-      const formatted = parseFloat(displayPrice.toFixed(4))
-        .toString()
-        .replace(/\.?0+$/, "");
+      const formatted = parseFloat(displayPrice.toFixed(4)).toString().replace(/\.?0+$/, "");
       setBuyPrice(formatted);
       setBuyPriceCurrency(displayCurrency);
-      const upperCode = code.trim().toUpperCase();
-      setExchange(nativeCurrency === "aud" ? "ASX" : nativeCurrency === "inr" ? (upperCode.endsWith(".BO") ? "BSE" : "NSE") : "NASDAQ");
-      enqueueSnackbar(`Fetched live price for ${code.trim().toUpperCase()}: ${displayCurrency.toUpperCase()} $${displayPrice.toFixed(2)}`, { variant: "success" });
+      enqueueSnackbar(`Fetched live price for ${normalizedCode}: ${displayCurrency.toUpperCase()} $${displayPrice.toFixed(2)}`, { variant: "success" });
     } catch (err) {
       enqueueSnackbar(`Error fetching price: ${err instanceof Error ? err.message : String(err)}`, { variant: "error" });
     } finally {
@@ -62,15 +78,17 @@ export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setAdding(true);
+
+    const normalizedCode = normalizeCodeForMarket(code, market);
 
     const res = await fetch("/api/holdings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        code: code.trim(),
+        code: normalizedCode,
         buyPrice: buyPrice || undefined,
         buyPriceCurrency: buyPriceCurrency || undefined,
         quantity: quantity || undefined,
@@ -95,7 +113,6 @@ export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
     setCode("");
     setBuyPrice("");
     setBuyPriceCurrency("");
-    setExchange("");
     setQuantity("");
     setAmountAud("");
     onAdded();
@@ -103,20 +120,36 @@ export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      {/* Market selector */}
+      <label className="flex flex-col gap-1 text-sm text-muted">
+        Market
+        <select
+          className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
+          value={market}
+          onChange={(e) => {
+            setMarket(e.target.value as Market);
+            setCode("");
+            setBuyPrice("");
+            setBuyPriceCurrency("");
+          }}
+        >
+          {MARKET_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </label>
+
       {/* Stock code + fetch price button */}
       <div className="grid grid-cols-[1fr_130px] gap-2 items-end">
         <label className="flex flex-col gap-1 text-sm text-muted">
-          Stock Code{exchange ? ` (${exchange})` : ""}
+          Stock Code
           <input
             className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
-            placeholder="BHP, AAPL, RELIANCE.NS, TCS.BO"
+            placeholder={selectedMarket.placeholder}
             value={code}
             onChange={(e) => setCode(e.target.value)}
             required
           />
-          <span className="text-[11px] text-muted mt-0.5">
-            ASX: <span className="text-ink">BHP</span> &nbsp;·&nbsp; NASDAQ: <span className="text-ink">AAPL</span> &nbsp;·&nbsp; NSE: <span className="text-ink">RELIANCE.NS</span> &nbsp;·&nbsp; BSE: <span className="text-ink">TCS.BO</span>
-          </span>
         </label>
         <button
           type="button"
