@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   const userId = getUserId(session);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { code, quantity, amountAud } = await req.json();
+  const { code, quantity, amountAud, buyPrice, buyPriceCurrency } = await req.json();
 
   if (!code?.trim()) {
     return NextResponse.json({ error: "Enter a stock code." }, { status: 400 });
@@ -24,19 +24,29 @@ export async function POST(req: NextRequest) {
 
   const normalizedCode = code.trim().toUpperCase();
 
-  // Always fetch a fresh live price from Yahoo at the moment of purchase
+  // Try to fetch a live price; fall back to the manual buy-in price if provided
   const priceResult = await fetchLivePrice(normalizedCode);
   const livePrice = priceResult?.price ?? null;
-  const priceCurrency = priceResult?.currency ?? "aud";
 
-  if (!livePrice || livePrice <= 0) {
-    return NextResponse.json(
-      { error: "Could not fetch a live price for this stock. Please try again." },
-      { status: 422 }
-    );
+  let buyPriceNum: number;
+  let priceCurrency: "aud" | "usd";
+
+  if (livePrice && livePrice > 0) {
+    buyPriceNum = livePrice;
+    priceCurrency = (priceResult?.currency ?? "aud") as "aud" | "usd";
+  } else {
+    const manualPrice = buyPrice ? parseFloat(String(buyPrice).replace(/,/g, "")) : NaN;
+    if (!isNaN(manualPrice) && manualPrice > 0) {
+      buyPriceNum = manualPrice;
+      const raw = buyPriceCurrency?.trim().toLowerCase() || "aud";
+      priceCurrency = (raw === "usd" ? "usd" : "aud") as "aud" | "usd";
+    } else {
+      return NextResponse.json(
+        { error: "Could not fetch a live price for this stock. Enter a buy-in price manually and try again." },
+        { status: 422 }
+      );
+    }
   }
-
-  const buyPriceNum = livePrice;
 
   let quantityNum: number;
 
