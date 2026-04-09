@@ -4,13 +4,22 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
-const TOPICS = [
+const TOPICS_LOGGED_IN = [
   "Select a topic…",
-  "I can't log in to my account",
   "A stock price isn't updating",
   "I was charged but my account isn't upgraded",
   "I can't find a stock (ASX or NASDAQ)",
-"I want a refund",
+  "I want a refund",
+  "I found a bug",
+  "Other",
+];
+
+const TOPICS_LOGGED_OUT = [
+  "Select a topic…",
+  "I can't log in to my account",
+  "I forgot my password",
+  "I have a question about pricing",
+  "I want a refund",
   "I found a bug",
   "Other",
 ];
@@ -29,6 +38,13 @@ export default function SupportPage() {
       setFromEmail(session.user.email);
     }
   }, [session?.user?.email]);
+
+  const topics = isLoggedIn ? TOPICS_LOGGED_IN : TOPICS_LOGGED_OUT;
+
+  // Reset topic if it no longer exists in the current list
+  useEffect(() => {
+    if (topic && !topics.includes(topic)) setTopic("");
+  }, [isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
@@ -98,7 +114,7 @@ export default function SupportPage() {
                   onChange={(e) => setTopic(e.target.value)}
                   required
                 >
-                  {TOPICS.map((t) => (
+                  {topics.map((t) => (
                     <option key={t} value={t === "Select a topic…" ? "" : t} disabled={t === "Select a topic…"}>
                       {t}
                     </option>
