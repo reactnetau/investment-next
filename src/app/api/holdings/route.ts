@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { fetchLivePrice, getAudUsdRate } from "@/lib/price";
+import { fetchLivePrice, getAudUsdRate, getUsdInrRate } from "@/lib/price";
 import { convertAmount } from "@/lib/currency";
+import type { Currency } from "@/lib/currency";
 import { getSession, getUserId } from "@/lib/session";
 import { FREE_HOLDING_LIMIT } from "@/lib/plans";
 import { getActivePortfolioId } from "@/lib/profile";
@@ -24,24 +25,26 @@ export async function POST(req: NextRequest) {
 
   const normalizedCode = code.trim().toUpperCase();
 
-  // Try to fetch a live price; fall back to the manual buy-in price if provided
-  const priceResult = await fetchLivePrice(normalizedCode);
-  const livePrice = priceResult?.price ?? null;
+  const manualPrice = buyPrice ? parseFloat(String(buyPrice).replace(/,/g, "")) : NaN;
+  const hasManualPrice = !isNaN(manualPrice) && manualPrice > 0;
 
   let buyPriceNum: number;
-  let priceCurrency: "aud" | "usd";
-
+  let priceCurrency: Currency;
   let usedLivePrice = false;
-  if (livePrice && livePrice > 0) {
-    buyPriceNum = livePrice;
-    priceCurrency = (priceResult?.currency ?? "aud") as "aud" | "usd";
-    usedLivePrice = true;
+
+  if (hasManualPrice) {
+    // User explicitly entered a buy-in price — use it as-is
+    buyPriceNum = manualPrice;
+    const raw = buyPriceCurrency?.trim().toLowerCase() || "aud";
+    priceCurrency = (raw === "usd" ? "usd" : raw === "inr" ? "inr" : "aud") as Currency;
   } else {
-    const manualPrice = buyPrice ? parseFloat(String(buyPrice).replace(/,/g, "")) : NaN;
-    if (!isNaN(manualPrice) && manualPrice > 0) {
-      buyPriceNum = manualPrice;
-      const raw = buyPriceCurrency?.trim().toLowerCase() || "aud";
-      priceCurrency = (raw === "usd" ? "usd" : "aud") as "aud" | "usd";
+    // No manual price — fetch live price from Yahoo Finance
+    const priceResult = await fetchLivePrice(normalizedCode);
+    const livePrice = priceResult?.price ?? null;
+    if (livePrice && livePrice > 0) {
+      buyPriceNum = livePrice;
+      priceCurrency = priceResult?.currency ?? "aud";
+      usedLivePrice = true;
     } else {
       return NextResponse.json(
         { error: "Could not fetch a live price for this stock. Enter a buy-in price manually and try again." },
@@ -61,7 +64,7 @@ export async function POST(req: NextRequest) {
   });
   if (!portfolio) return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
 
-  const portfolioCurrency = portfolio.currency as "aud" | "usd";
+  const portfolioCurrency = portfolio.currency as Currency;
 
   // Enforce free tier holding limit
   const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
@@ -72,6 +75,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const [fxRate, usdInrRate] = await Promise.all([getAudUsdRate(), getUsdInrRate()]);
+
   if (amountAud) {
     // amountAud is entered in portfolio currency
     const amount = parseFloat(String(amountAud).replace(/,/g, ""));
@@ -79,8 +84,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Amount must be greater than zero." }, { status: 400 });
     }
     // Convert amount to native currency to calculate quantity
-    const fxRate = await getAudUsdRate();
-    const amountInNative = convertAmount(amount, portfolioCurrency, priceCurrency, fxRate);
+    const amountInNative = convertAmount(amount, portfolioCurrency, priceCurrency, fxRate, usdInrRate);
     quantityNum = amountInNative / buyPriceNum;
   } else {
     quantityNum = parseFloat(String(quantity).replace(/,/g, ""));
@@ -91,8 +95,7 @@ export async function POST(req: NextRequest) {
 
   // Cost in native currency → convert to portfolio currency for cash deduction
   const costNative = buyPriceNum * quantityNum;
-  const fxRate = await getAudUsdRate();
-  const costInPortfolioCurrency = convertAmount(costNative, priceCurrency, portfolioCurrency, fxRate);
+  const costInPortfolioCurrency = convertAmount(costNative, priceCurrency, portfolioCurrency, fxRate, usdInrRate);
 
   if (moneyToCents(costInPortfolioCurrency) > moneyToCents(portfolio.cash)) {
     return NextResponse.json(
