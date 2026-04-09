@@ -31,9 +31,11 @@ export async function POST(req: NextRequest) {
   let buyPriceNum: number;
   let priceCurrency: "aud" | "usd";
 
+  let usedLivePrice = false;
   if (livePrice && livePrice > 0) {
     buyPriceNum = livePrice;
     priceCurrency = (priceResult?.currency ?? "aud") as "aud" | "usd";
+    usedLivePrice = true;
   } else {
     const manualPrice = buyPrice ? parseFloat(String(buyPrice).replace(/,/g, "")) : NaN;
     if (!isNaN(manualPrice) && manualPrice > 0) {
@@ -119,7 +121,7 @@ export async function POST(req: NextRequest) {
     }),
   ]);
 
-  const message = `Bought ${quantityNum.toFixed(4)} shares of ${normalizedCode} at ${priceCurrency.toUpperCase()} ${buyPriceNum.toFixed(2)} (live price).`;
+  const message = `Bought ${quantityNum.toFixed(4)} shares of ${normalizedCode} at ${priceCurrency.toUpperCase()} ${buyPriceNum.toFixed(2)}${usedLivePrice ? " (live price)" : ""}.`;
 
   return NextResponse.json({ holding, message }, { status: 201 });
 }

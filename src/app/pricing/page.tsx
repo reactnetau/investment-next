@@ -49,7 +49,7 @@ const FAQS = [
   },
   {
     q: "Why is the Pro plan a one-off payment?",
-    a: "We believe in simple, honest pricing. You pay once and have Pro access permanently. There is no monthly subscription to cancel and no price increases.",
+    a: "We believe in simple, honest pricing. You pay once and have Pro access permanently. There is no monthly subscription to cancel.",
   },
   {
     q: "What is a portfolio?",
@@ -58,10 +58,6 @@ const FAQS = [
   {
     q: "Can I get a refund?",
     a: "If you have an issue with your purchase, contact us via the support page and we will sort it out.",
-  },
-  {
-    q: "Do prices ever increase?",
-    a: "The current Pro price is a fixed one-off payment. Once you have paid, you will not be charged again.",
   },
 ];
 
