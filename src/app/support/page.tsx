@@ -21,7 +21,7 @@ export default function SupportPage() {
   const [topic, setTopic] = useState("");
   const [message, setMessage] = useState("");
   const [fromEmail, setFromEmail] = useState(session?.user?.email ?? "");
-  const [fromName, setFromName] = useState(session?.user?.name ?? "");
+  const [fromName, setFromName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
