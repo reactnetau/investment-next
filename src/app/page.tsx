@@ -3,8 +3,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getSiteUrl } from "@/lib/app-url";
 import { MarketingNav, MarketingFooter } from "@/components/MarketingNav";
+import schmappsLogo from "@/assets/schmappslogo.png";
 
 const siteUrl = getSiteUrl();
 
@@ -107,6 +109,15 @@ export default async function HomePage() {
         <section className="max-w-6xl mx-auto px-6 pt-16 pb-16 sm:pt-20 w-full">
           <div className="theme-panel overflow-hidden px-6 py-10 sm:px-10 sm:py-14 text-center relative">
           <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-r from-[rgba(96,165,250,0.12)] via-transparent to-[rgba(34,197,94,0.12)]" />
+          <div className="mb-6 inline-flex items-center gap-3 rounded-[28px] border border-white/70 bg-white/82 px-4 py-3 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur-sm relative z-10">
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-3xl border border-white/70 bg-white shadow-[0_12px_24px_rgba(34,197,94,0.14)]">
+              <Image src={schmappsLogo} alt="Schmapps logo" className="h-9 w-9 object-contain" priority />
+            </div>
+            <div className="text-left">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--ink-muted)]">Schmapps</p>
+              <p className="text-sm font-semibold text-[var(--ink-strong)]">Investors Playground</p>
+            </div>
+          </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/85 px-4 py-1.5 text-xs font-semibold text-[var(--accent)] mb-8 relative z-10">
             Live ASX, NASDAQ, NSE &amp; BSE prices
           </div>
