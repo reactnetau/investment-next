@@ -37,12 +37,15 @@ export default function OpenGraphImage() {
 
         <div
           style={{
+            position: "absolute",
+            inset: 36,
             display: "flex",
             flexDirection: "column",
-            justifyContent: "space-between",
-            padding: "72px 76px",
-            width: "100%",
+            justifyContent: "flex-start",
+            gap: 36,
+            padding: "52px 56px",
             zIndex: 1,
+            boxSizing: "border-box",
           }}
         >
           <div
@@ -51,7 +54,7 @@ export default function OpenGraphImage() {
               alignItems: "center",
               gap: 16,
               color: "#0c6b58",
-              fontSize: 28,
+              fontSize: 26,
               fontWeight: 700,
               letterSpacing: 2,
               textTransform: "uppercase",
@@ -68,11 +71,11 @@ export default function OpenGraphImage() {
             Investors Playground
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 760 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 760 }}>
             <div
               style={{
-                fontSize: 82,
-                lineHeight: 1.02,
+                fontSize: 74,
+                lineHeight: 1.04,
                 fontWeight: 800,
                 letterSpacing: -2.5,
               }}
@@ -81,8 +84,8 @@ export default function OpenGraphImage() {
             </div>
             <div
               style={{
-                fontSize: 32,
-                lineHeight: 1.3,
+                fontSize: 28,
+                lineHeight: 1.28,
                 color: "#5f6b72",
                 maxWidth: 700,
               }}
@@ -91,7 +94,7 @@ export default function OpenGraphImage() {
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 18 }}>
+          <div style={{ display: "flex", gap: 14, marginTop: "auto", flexWrap: "wrap" }}>
             {["Live ASX, NASDAQ, NSE & BSE", "Portfolio tracking", "Risk-free practice"].map((label) => (
               <div
                 key={label}
@@ -101,8 +104,8 @@ export default function OpenGraphImage() {
                   borderRadius: 999,
                   border: "1px solid rgba(12, 107, 88, 0.14)",
                   background: "rgba(12, 107, 88, 0.08)",
-                  padding: "14px 22px",
-                  fontSize: 24,
+                  padding: "12px 18px",
+                  fontSize: 22,
                   fontWeight: 600,
                   color: "#0c6b58",
                 }}
