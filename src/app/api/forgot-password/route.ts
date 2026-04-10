@@ -27,11 +27,13 @@ export async function POST(req: NextRequest) {
     data: { resetToken: token, resetTokenExpiry: expiry },
   });
 
+  // TODO: remove debug error detail before launch
   try {
     await sendPasswordResetEmail(user.email, token);
   } catch (e) {
-    console.error("Failed to send reset email:", e);
-    return NextResponse.json({ error: "Failed to send reset email. Please try again." }, { status: 500 });
+    const detail = e instanceof Error ? e.message : String(e);
+    console.error("Failed to send reset email:", detail);
+    return NextResponse.json({ error: `Email failed: ${detail}` }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

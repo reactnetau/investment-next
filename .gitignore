@@ -19,3 +19,5 @@ prisma/dev.db-journal
 *.pem
 
 commands.txt
+CLAUDE.md
+skills/

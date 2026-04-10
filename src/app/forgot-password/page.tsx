@@ -22,8 +22,10 @@ export default function ForgotPasswordPage() {
 
     setLoading(false);
 
+    const data = await res.json();
+
+    // TODO: remove debug error detail before launch
     if (!res.ok) {
-      const data = await res.json();
       setError(data.error ?? "Something went wrong. Please try again.");
       return;
     }
