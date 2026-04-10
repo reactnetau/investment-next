@@ -100,54 +100,70 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="min-h-screen flex flex-col">
+      <div className="theme-shell flex flex-col">
         <MarketingNav />
 
         {/* Hero */}
-        <section className="flex-1 flex flex-col items-center justify-center text-center px-6 py-20 max-w-4xl mx-auto w-full">
-          <div className="inline-flex items-center gap-2 rounded-full border border-line bg-panel px-4 py-1.5 text-xs font-semibold text-accent mb-8">
+        <section className="max-w-6xl mx-auto px-6 pt-16 pb-16 sm:pt-20 w-full">
+          <div className="theme-panel overflow-hidden px-6 py-10 sm:px-10 sm:py-14 text-center relative">
+          <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-r from-[rgba(96,165,250,0.12)] via-transparent to-[rgba(34,197,94,0.12)]" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/85 px-4 py-1.5 text-xs font-semibold text-[var(--accent)] mb-8 relative z-10">
             Live ASX, NASDAQ, NSE &amp; BSE prices
           </div>
-          <h1 className="text-5xl sm:text-6xl font-extrabold text-ink leading-tight tracking-tight mb-6">
+          <div className="theme-kicker mb-6 relative z-10">Risk-free practice</div>
+          <h1 className="text-5xl sm:text-6xl font-extrabold text-[var(--ink-strong)] leading-tight tracking-tight mb-6 relative z-10">
             Build investing confidence<br className="hidden sm:block" /> before you risk real money.
           </h1>
-          <p className="text-lg text-muted max-w-2xl mb-10 leading-relaxed">
+          <p className="text-lg text-[var(--ink-soft)] max-w-2xl mb-10 leading-relaxed mx-auto relative z-10">
             Investors Playground is a free stock market simulator. Practice buying and selling real stocks from the ASX, NASDAQ, NSE and BSE using live prices, track your portfolio, and learn the markets — completely risk-free.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center relative z-10">
             <Link
               href="/register"
-              className="rounded-xl bg-accent text-white font-bold text-base px-8 py-4 hover:opacity-90 transition"
+              className="theme-button-primary px-8 py-4"
             >
               Start for Free
             </Link>
             <Link
               href="/login"
-              className="rounded-xl border border-line bg-panel text-ink font-bold text-base px-8 py-4 hover:bg-[#f0ece3] transition"
+              className="theme-button-secondary px-8 py-4"
             >
               Sign In
             </Link>
+          </div>
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 relative z-10 text-left">
+            {[
+              'Live market prices across four exchanges',
+              'Practice portfolios without real risk',
+              'Clean tracking with less financial noise',
+            ].map((item) => (
+              <div key={item} className="rounded-2xl border border-white/60 bg-white/76 px-4 py-3 text-sm text-[var(--ink-soft)] shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                {item}
+              </div>
+            ))}
+          </div>
           </div>
         </section>
 
         {/* Features */}
         <section className="py-20 px-6">
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-3xl font-extrabold text-ink text-center mb-3 tracking-tight">
+            <p className="text-xs font-semibold text-[var(--ink-muted)] uppercase tracking-[0.24em] text-center mb-3">Everything you need</p>
+            <h2 className="text-3xl font-extrabold text-[var(--ink-strong)] text-center mb-3 tracking-tight">
               Everything you need to practise investing
             </h2>
-            <p className="text-center text-muted mb-12 max-w-xl mx-auto">
+            <p className="text-center text-[var(--ink-soft)] mb-12 max-w-xl mx-auto">
               A full portfolio simulator with real market data — no sign-up fees, no complexity.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {FEATURES.map((f) => (
                 <div
                   key={f.title}
-                  className="rounded-2xl border border-line bg-panel p-6"
-                  style={{ boxShadow: "var(--shadow)" }}
+                  className="theme-card p-6 sm:p-7 bg-white/95"
                 >
-                  <h3 className="text-base font-bold text-ink mb-2">{f.title}</h3>
-                  <p className="text-sm text-muted leading-relaxed">{f.description}</p>
+                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--surface-muted)] text-lg font-bold text-[var(--accent)]">↗</div>
+                  <h3 className="text-base font-bold text-[var(--ink-strong)] mb-2">{f.title}</h3>
+                  <p className="text-sm text-[var(--ink-soft)] leading-relaxed">{f.description}</p>
                 </div>
               ))}
             </div>
@@ -155,19 +171,19 @@ export default async function HomePage() {
         </section>
 
         {/* How it works */}
-        <section className="py-20 px-6 bg-panel border-y border-line">
+        <section className="py-20 px-6">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl font-extrabold text-ink text-center mb-12 tracking-tight">
+            <h2 className="text-3xl font-extrabold text-[var(--ink-strong)] text-center mb-12 tracking-tight">
               How it works
             </h2>
             <div className="flex flex-col sm:flex-row gap-8 justify-center">
               {STEPS.map((s) => (
-                <div key={s.step} className="flex flex-col items-center text-center flex-1">
-                  <div className="w-12 h-12 rounded-full bg-accent text-white font-extrabold text-xl flex items-center justify-center mb-4">
+                <div key={s.step} className="theme-card flex flex-col items-center text-center flex-1 p-6 sm:p-7 bg-white/95">
+                  <div className="w-12 h-12 rounded-full bg-[var(--accent)] text-white font-extrabold text-xl flex items-center justify-center mb-4 shadow-[0_12px_24px_rgba(34,197,94,0.25)]">
                     {s.step}
                   </div>
-                  <h3 className="font-bold text-ink mb-1">{s.title}</h3>
-                  <p className="text-sm text-muted">{s.body}</p>
+                  <h3 className="font-bold text-[var(--ink-strong)] mb-1">{s.title}</h3>
+                  <p className="text-sm text-[var(--ink-soft)]">{s.body}</p>
                 </div>
               ))}
             </div>
@@ -177,15 +193,15 @@ export default async function HomePage() {
         {/* CTA */}
         <section className="py-24 px-6 text-center">
           <div className="max-w-xl mx-auto">
-            <h2 className="text-3xl font-extrabold text-ink mb-4 tracking-tight">
+            <h2 className="text-3xl font-extrabold text-[var(--ink-strong)] mb-4 tracking-tight">
               Ready to start practising?
             </h2>
-            <p className="text-muted mb-8">
+            <p className="text-[var(--ink-soft)] mb-8">
               Free to get started. No credit card required. Upgrade to Pro for unlimited holdings with a single one-off payment.
             </p>
             <Link
               href="/register"
-              className="inline-block rounded-xl bg-accent text-white font-bold text-base px-10 py-4 hover:opacity-90 transition"
+              className="theme-button-primary px-10 py-4"
             >
               Create Free Account
             </Link>

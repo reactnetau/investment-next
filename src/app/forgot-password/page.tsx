@@ -34,12 +34,12 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-ink mb-1">Investment Simulator</h1>
-        <p className="text-muted mb-8 text-sm">Reset your password.</p>
+    <div className="min-h-screen px-4 py-10 sm:py-16">
+      <div className="theme-panel mx-auto w-full max-w-md px-6 py-7 sm:px-8 sm:py-9">
+        <h1 className="text-3xl font-bold text-[var(--ink-strong)] mb-1">Investment Simulator</h1>
+        <p className="text-[var(--ink-soft)] mb-8 text-sm">Reset your password.</p>
 
-        <div className="rounded-2xl border border-line bg-panel p-6" style={{ boxShadow: "var(--shadow)" }}>
+        <div className="theme-card p-6 bg-white/95">
           <h2 className="text-lg font-bold text-ink mb-5">Forgot Password</h2>
 
           {sent ? (
@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
                   Email address
                   <input
                     type="email"
-                    className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="theme-input"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="rounded-xl bg-accent py-3 text-white font-bold text-base hover:opacity-90 disabled:opacity-60 transition"
+                  className="theme-button-primary w-full disabled:opacity-60"
                 >
                   {loading ? "Sending…" : "Send Reset Link"}
                 </button>

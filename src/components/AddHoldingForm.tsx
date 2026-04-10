@@ -124,7 +124,7 @@ export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
       <label className="flex flex-col gap-1 text-sm text-muted">
         Market
         <select
-          className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
+          className="theme-input bg-white"
           value={market}
           onChange={(e) => {
             setMarket(e.target.value as Market);
@@ -144,7 +144,7 @@ export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
         <label className="flex flex-col gap-1 text-sm text-muted">
           Stock Code
           <input
-            className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
+            className="theme-input"
             placeholder={selectedMarket.placeholder}
             value={code}
             onChange={(e) => setCode(e.target.value)}
@@ -155,7 +155,7 @@ export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
           type="button"
           onClick={fetchPrice}
           disabled={fetchingPrice}
-          className="rounded-xl bg-[#d8a23d] text-[#2e2416] font-bold py-3 text-sm hover:opacity-90 disabled:opacity-60 transition"
+          className="theme-button-secondary h-[50px] px-3 py-3 text-center"
         >
           {fetchingPrice ? "Fetching…" : "Fetch Price"}
         </button>
@@ -164,7 +164,7 @@ export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
       <label className="flex flex-col gap-1 text-sm text-muted">
         Buy-In Price{buyPriceCurrency ? ` (${buyPriceCurrency.toUpperCase()})` : ""}
         <input
-          className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
+          className="theme-input"
           placeholder="12.50 or leave blank for live price"
           value={buyPrice}
           onChange={(e) => setBuyPrice(e.target.value)}
@@ -174,7 +174,7 @@ export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
       <label className="flex flex-col gap-1 text-sm text-muted">
         Quantity
         <input
-          className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-40 disabled:cursor-not-allowed"
+          className="theme-input disabled:opacity-40 disabled:cursor-not-allowed"
           placeholder="10"
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
@@ -185,7 +185,7 @@ export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
       <label className="flex flex-col gap-1 text-sm text-muted">
         Amount (AUD)
         <input
-          className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-40 disabled:cursor-not-allowed"
+          className="theme-input disabled:opacity-40 disabled:cursor-not-allowed"
           placeholder="500"
           value={amountAud}
           onChange={(e) => setAmountAud(e.target.value)}
@@ -196,7 +196,7 @@ export function AddHoldingForm({ onAdded, onUpgradeRequired }: Props) {
       <button
         type="submit"
         disabled={adding}
-        className="rounded-xl bg-accent text-white font-bold py-3 text-base hover:opacity-90 disabled:opacity-60 transition"
+        className="theme-button-primary w-full disabled:opacity-60"
       >
         {adding ? "Adding…" : "Add Stock"}
       </button>

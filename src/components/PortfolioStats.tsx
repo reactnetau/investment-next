@@ -25,11 +25,8 @@ interface StatCardProps {
 
 function StatCard({ label, value, valueClass = "text-ink" }: StatCardProps) {
   return (
-    <div
-      className="rounded-[18px] border border-line bg-panel p-4"
-      style={{ boxShadow: "var(--shadow)" }}
-    >
-      <div className="text-muted text-xs uppercase tracking-widest font-medium">{label}</div>
+    <div className="theme-card p-4 bg-white/95">
+      <div className="text-[var(--ink-muted)] text-xs uppercase tracking-widest font-medium">{label}</div>
       <div className={`mt-2 text-2xl font-bold ${valueClass}`}>{value}</div>
     </div>
   );

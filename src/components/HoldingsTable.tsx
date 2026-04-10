@@ -50,7 +50,7 @@ export function HoldingsTable({ holdings, onSell, selling, currency, fxRate, usd
 
   if (holdings.length === 0) {
     return (
-      <div className="text-center text-muted py-8 text-sm">No stocks added yet.</div>
+      <div className="text-center text-[var(--ink-soft)] py-8 text-sm">No stocks added yet.</div>
     );
   }
 
@@ -58,7 +58,7 @@ export function HoldingsTable({ holdings, onSell, selling, currency, fxRate, usd
     <div className="overflow-x-auto rounded-[14px]">
       <table className="w-full border-collapse text-sm whitespace-nowrap">
         <thead>
-          <tr className="bg-[#efe6d8] text-[#56483b]">
+          <tr className="bg-[rgba(224,239,255,0.6)] text-[var(--ink-soft)]">
             {["Code", "Market", "Buy Price", "Current Price", "Qty", "% Change", "Days Held", "Invested", "Current Value", "P/L", "Action"].map((h) => (
               <th key={h} className="px-3 py-3 text-center text-xs uppercase tracking-wider font-semibold">
                 {h}
@@ -82,11 +82,11 @@ export function HoldingsTable({ holdings, onSell, selling, currency, fxRate, usd
             const daysHeld = Math.max(0, Math.floor((Date.now() - new Date(h.purchasedOn).getTime()) / (1000 * 60 * 60 * 24)));
 
             return (
-              <tr key={h.id} className="border-b border-line last:border-b-0 hover:bg-[#f9f5ed] transition-colors">
+              <tr key={h.id} className="border-b border-[var(--line)] last:border-b-0 hover:bg-[var(--surface-muted)] transition-colors">
                 <td className="px-3 py-3 text-center">
-                  <div className="font-semibold text-ink">{h.code}</div>
+                  <div className="font-semibold text-[var(--ink-strong)]">{h.code}</div>
                 </td>
-                <td className="px-3 py-3 text-center text-muted">
+                <td className="px-3 py-3 text-center text-[var(--ink-soft)]">
                   {pc === "aud" ? "ASX" : pc === "inr" ? (h.code.toUpperCase().endsWith(".BO") ? "BSE" : "NSE") : "NASDAQ"}
                 </td>
                 <td className="px-3 py-3 text-center">{fmt(displayBuy)}</td>
@@ -95,11 +95,11 @@ export function HoldingsTable({ holdings, onSell, selling, currency, fxRate, usd
                     <div>
                       <div>{fmt(displayPrice)}</div>
                       {h.priceUpdatedAt && (
-                        <div className="text-[10px] text-muted font-normal">{timeAgo(h.priceUpdatedAt)}</div>
+                        <div className="text-[10px] text-[var(--ink-muted)] font-normal">{timeAgo(h.priceUpdatedAt)}</div>
                       )}
                     </div>
                   ) : (
-                    <span className="text-muted">N/A</span>
+                    <span className="text-[var(--ink-soft)]">N/A</span>
                   )}
                 </td>
                 <td className="px-3 py-3 text-center">{fmtQty(h.quantity)}</td>
@@ -112,7 +112,7 @@ export function HoldingsTable({ holdings, onSell, selling, currency, fxRate, usd
                   <button
                     onClick={() => onSell(h)}
                     disabled={selling === h.id}
-                    className="rounded-[10px] bg-danger text-white text-xs font-bold px-3 py-2 hover:opacity-90 disabled:opacity-50 transition"
+                    className="rounded-xl bg-[var(--danger)] text-white text-xs font-bold px-3 py-2 hover:opacity-90 disabled:opacity-50 transition"
                   >
                     {selling === h.id ? "Selling…" : "Sell"}
                   </button>

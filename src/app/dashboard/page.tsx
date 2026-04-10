@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSnackbar } from "notistack";
 import { signOut, useSession } from "next-auth/react";
@@ -20,6 +21,7 @@ import { FREE_HOLDING_LIMIT } from "@/lib/plans";
 import { formatMoney } from "@/lib/currency";
 import { PriceCountdown } from "@/components/PriceCountdown";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import schmappsLogo from "@/assets/schmappslogo.png";
 
 type PortfolioWithHoldings = Portfolio & {
   holdings: HoldingWithAge[];
@@ -211,7 +213,7 @@ function Dashboard() {
   const atLimit = isFree && portfolio.holdings.length >= FREE_HOLDING_LIMIT;
 
   return (
-    <div className="w-full min-h-screen px-5 py-7 pb-12">
+    <div className="theme-shell w-full px-5 py-7 pb-12">
       {showUpgradeModal && (
         <UpgradeModal onClose={() => setShowUpgradeModal(false)} />
       )}
@@ -266,17 +268,26 @@ function Dashboard() {
       {/* Header */}
       <div className="flex justify-between items-start gap-4 mb-5">
         <div className="min-w-0">
+          <div className="mb-4 inline-flex items-center gap-3 rounded-[28px] border border-white/70 bg-white/82 px-4 py-3 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-3xl border border-white/70 bg-white shadow-[0_12px_24px_rgba(34,197,94,0.14)]">
+              <Image src={schmappsLogo} alt="Schmapps logo" className="h-9 w-9 object-contain" priority />
+            </div>
+            <div className="text-left">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--ink-muted)]">Schmapps</p>
+              <p className="text-sm font-semibold text-[var(--ink-strong)]">Investors Playground</p>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
-            <h1 className="text-[2.1rem] font-bold text-ink tracking-wide leading-tight">
+            <h1 className="text-[2.1rem] font-bold text-[var(--ink-strong)] tracking-wide leading-tight">
               Investment Simulator
             </h1>
             {portfolio.plan === "pro" && (
-              <span className="rounded-lg bg-[#d8a23d] text-[#2e2416] text-xs font-bold px-2.5 py-1 tracking-wide">
+              <span className="rounded-full bg-[rgba(224,239,255,0.8)] text-blue-700 text-xs font-bold px-3 py-1 tracking-wide">
                 PRO
               </span>
             )}
           </div>
-          <div className="text-muted text-sm mt-1">
+          <div className="text-[var(--ink-soft)] text-sm mt-1 max-w-3xl">
             Add stocks, refresh live prices from the internet, and track your total portfolio change. Supports ASX, NASDAQ, NSE and BSE.
           </div>
           {profiles.length > 0 && (
@@ -306,16 +317,16 @@ function Dashboard() {
       {/* Upgrade banner — shown when free user hits the limit */}
       {atLimit && (
         <div
-          className="rounded-2xl border border-[#d8a23d] bg-[#fffbf0] px-4 py-3 mb-4 flex items-center justify-between gap-4"
+          className="rounded-3xl border border-[rgba(34,197,94,0.28)] bg-white/92 px-4 py-4 mb-4 flex items-center justify-between gap-4 shadow-[0_16px_36px_rgba(15,23,42,0.08)]"
           style={{ boxShadow: "var(--shadow)" }}
         >
           <div>
-            <span className="text-sm font-bold text-ink">You've reached the free limit of {FREE_HOLDING_LIMIT} stocks.</span>
-            <span className="text-sm text-muted ml-2">Unlock unlimited stocks with a one-off payment.</span>
+            <span className="text-sm font-bold text-[var(--ink-strong)]">You've reached the free limit of {FREE_HOLDING_LIMIT} stocks.</span>
+            <span className="text-sm text-[var(--ink-soft)] ml-2">Unlock unlimited stocks with a one-off payment.</span>
           </div>
           <button
             onClick={() => setShowUpgradeModal(true)}
-            className="shrink-0 rounded-xl bg-[#d8a23d] text-[#2e2416] font-bold px-4 py-2 text-sm hover:opacity-90 transition"
+            className="theme-button-primary shrink-0 px-4 py-2 text-sm"
           >
             Unlock Pro — One-off {priceLabel}
           </button>
@@ -334,10 +345,10 @@ function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-4">
         {/* Left panel */}
         <div
-          className="rounded-[20px] border border-line bg-panel p-5"
+          className="theme-panel p-5"
           style={{ boxShadow: "var(--shadow)" }}
         >
-          <h2 className="text-base font-bold text-ink mb-4">Add Investment</h2>
+          <h2 className="text-base font-bold text-[var(--ink-strong)] mb-4">Add Investment</h2>
 
           <AddHoldingForm
             key={portfolio.id}
@@ -348,46 +359,46 @@ function Dashboard() {
             onUpgradeRequired={() => setShowUpgradeModal(true)}
           />
 
-          <h2 className="text-base font-bold text-ink mt-6 mb-3">Portfolio Actions</h2>
+          <h2 className="text-base font-bold text-[var(--ink-strong)] mt-6 mb-3">Portfolio Actions</h2>
 
           <div className="flex flex-col gap-2">
             <button
               onClick={() => setShowResetConfirm(true)}
               disabled={resetting}
-              className="rounded-xl bg-danger text-white font-bold py-3 text-sm hover:opacity-90 disabled:opacity-60 transition"
+              className="rounded-2xl bg-[var(--danger)] text-white font-bold py-3 text-sm hover:opacity-90 disabled:opacity-60 transition"
             >
               {resetting ? "Resetting…" : "Reset Portfolio"}
             </button>
           </div>
 
-          <p className="mt-4 text-xs text-muted leading-relaxed">
+          <p className="mt-4 text-xs text-[var(--ink-soft)] leading-relaxed">
             Starting cash is {formatMoney(portfolio.currency === "inr" ? 800000 : 10000, (portfolio.currency ?? "aud") as "aud" | "usd" | "inr")}. Enter an ASX code (e.g. BHP), NASDAQ/NYSE code (e.g. META, AAPL), or Indian stock with suffix (e.g. RELIANCE.NS, TCS.BO).
             Leave the buy-in price blank to use the live price. All values shown in {(portfolio.currency ?? "AUD").toUpperCase()}.
             {isFree && (
-              <span className="block mt-1">Free accounts can hold up to {FREE_HOLDING_LIMIT} stocks. <button onClick={() => setShowUpgradeModal(true)} className="text-accent underline">Unlock unlimited with a one-off payment</button>.</span>
+              <span className="block mt-1">Free accounts can hold up to {FREE_HOLDING_LIMIT} stocks. <button onClick={() => setShowUpgradeModal(true)} className="text-[var(--accent)] underline">Unlock unlimited with a one-off payment</button>.</span>
             )}
           </p>
         </div>
 
         {/* Right panel — holdings table */}
         <div
-          className="rounded-[20px] border border-line bg-panel p-5"
+          className="theme-panel p-5"
           style={{ boxShadow: "var(--shadow)" }}
         >
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-base font-bold text-ink">Portfolio</h2>
+            <h2 className="text-base font-bold text-[var(--ink-strong)]">Portfolio</h2>
             <div className="flex items-center gap-3">
               <button
                 onClick={handleRefreshPrices}
                 disabled={refreshingPrices}
-                className="rounded-xl bg-accent text-white font-bold px-2 py-1 text-[10px] sm:px-4 sm:py-2 sm:text-xs hover:opacity-90 disabled:opacity-60 transition"
+                className="theme-button-primary px-2 py-1 text-[10px] sm:px-4 sm:py-2 sm:text-xs disabled:opacity-60"
                 title="Fetch the latest prices for your holdings from Yahoo Finance"
               >
                 {refreshingPrices ? "Updating…" : "Update Live Prices"}
               </button>
               <PriceCountdown nextRefresh={portfolio.nextPriceRefresh} onRefreshDue={loadPortfolio} />
               {isFree && (
-                <span className="text-xs text-muted">{portfolio.holdings.length} / {FREE_HOLDING_LIMIT} stocks</span>
+                <span className="text-xs text-[var(--ink-soft)]">{portfolio.holdings.length} / {FREE_HOLDING_LIMIT} stocks</span>
               )}
             </div>
           </div>

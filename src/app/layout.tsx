@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/SessionProvider";
 import { NotistackProvider } from "@/components/NotistackProvider";
 import { getSiteUrl } from "@/lib/app-url";
+
+const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 const siteUrl = getSiteUrl();
 
@@ -64,7 +67,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body className={`${inter.className} bg-[var(--app-bg)] text-[var(--ink-strong)] antialiased`}>
         <SessionProvider>
           <NotistackProvider>{children}</NotistackProvider>
         </SessionProvider>

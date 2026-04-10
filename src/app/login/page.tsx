@@ -30,12 +30,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-ink mb-1">Investment Simulator</h1>
-        <p className="text-muted mb-8 text-sm">Sign in to manage your portfolio.</p>
+    <div className="min-h-screen px-4 py-10 sm:py-16">
+      <div className="mx-auto grid max-w-5xl items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="hidden lg:block px-4">
+          <p className="theme-kicker mb-5">Welcome back</p>
+          <h1 className="text-5xl font-bold tracking-tight text-[var(--ink-strong)] leading-tight">Sign in and keep practising with a clear view of your portfolio.</h1>
+          <p className="mt-5 max-w-lg text-base text-[var(--ink-soft)]">Live prices, clean portfolio tracking, and a calmer investing workspace without real-money pressure.</p>
+        </div>
 
-        <div className="rounded-2xl border border-line bg-panel p-6" style={{ boxShadow: "var(--shadow)" }}>
+        <div className="theme-panel w-full max-w-md justify-self-center px-6 py-7 sm:px-8 sm:py-9">
+        <h1 className="text-3xl font-bold text-[var(--ink-strong)] mb-1">Investment Simulator</h1>
+        <p className="text-[var(--ink-soft)] mb-8 text-sm">Sign in to manage your portfolio.</p>
+
+        <div className="theme-card p-6 bg-white/95">
           <h2 className="text-lg font-bold text-ink mb-5">Sign In</h2>
 
           {error && (
@@ -49,7 +56,7 @@ export default function LoginPage() {
               Email
               <input
                 type="email"
-                className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
+                className="theme-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -61,7 +68,7 @@ export default function LoginPage() {
               Password
               <input
                 type="password"
-                className="rounded-xl border border-line bg-white px-3 py-3 text-ink text-base focus:outline-none focus:ring-2 focus:ring-accent"
+                className="theme-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -77,7 +84,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-accent py-3 text-white font-bold text-base hover:opacity-90 disabled:opacity-60 transition"
+              className="theme-button-primary w-full disabled:opacity-60"
             >
               {loading ? "Signing in…" : "Sign In"}
             </button>
@@ -90,6 +97,7 @@ export default function LoginPage() {
             Create one
           </Link>
         </p>
+        </div>
       </div>
     </div>
   );

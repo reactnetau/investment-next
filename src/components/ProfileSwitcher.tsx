@@ -137,7 +137,7 @@ export function ProfileSwitcher({ profiles, plan, onSwitch, onUpgrade }: Props) 
       <div className="relative" ref={ref}>
         <button
           onClick={() => { setOpen((v) => !v); setRenamingId(null); }}
-          className="flex items-center gap-1.5 rounded-xl border border-line bg-panel px-3 py-2 text-sm text-ink hover:bg-[#f0ece3] transition max-w-[200px]"
+          className="flex items-center gap-1.5 rounded-2xl border border-white/60 bg-white/88 px-3 py-2 text-sm text-[var(--ink-strong)] hover:bg-white transition max-w-[220px]"
           style={{ boxShadow: "var(--shadow)" }}
         >
           <span className="truncate font-medium">{activeProfile?.name ?? "Portfolio"}</span>
@@ -153,18 +153,18 @@ export function ProfileSwitcher({ profiles, plan, onSwitch, onUpgrade }: Props) 
 
         {open && (
           <div
-            className="absolute left-0 top-11 w-72 bg-panel border border-line rounded-2xl overflow-hidden z-50"
+            className="absolute left-0 top-12 w-80 bg-white/94 border border-white/60 rounded-[24px] overflow-hidden z-50 backdrop-blur-xl"
             style={{ boxShadow: "var(--shadow)" }}
           >
             <div className="px-3 pt-3 pb-1">
-              <p className="text-xs text-muted font-medium uppercase tracking-wide px-1 mb-1">Your Portfolios</p>
+              <p className="text-xs text-[var(--ink-muted)] font-medium uppercase tracking-wide px-1 mb-1">Your Portfolios</p>
             </div>
 
             {profiles.map((profile) => (
               <div
                 key={profile.id}
-                className={`flex items-center gap-1 px-3 py-2 hover:bg-[#f0ece3] transition ${
-                  profile.isActive ? "bg-[#f7f3ea]" : ""
+                className={`flex items-center gap-1 px-3 py-2 hover:bg-[var(--surface-muted)] transition ${
+                  profile.isActive ? "bg-[rgba(224,239,255,0.55)]" : ""
                 }`}
               >
                 {renamingId === profile.id ? (
@@ -175,7 +175,7 @@ export function ProfileSwitcher({ profiles, plan, onSwitch, onUpgrade }: Props) 
                   >
                     <input
                       ref={renameInputRef}
-                      className="flex-1 rounded-lg border border-accent bg-white px-2 py-1 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
+                      className="flex-1 rounded-xl border border-[var(--accent)] bg-white px-3 py-2 text-sm text-[var(--ink-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                       value={renameValue}
                       onChange={(e) => setRenameValue(e.target.value)}
                       maxLength={40}
@@ -185,14 +185,14 @@ export function ProfileSwitcher({ profiles, plan, onSwitch, onUpgrade }: Props) 
                     <button
                       type="submit"
                       disabled={renameSaving || !renameValue.trim()}
-                      className="shrink-0 rounded-lg bg-accent px-2 py-1 text-xs text-white font-semibold hover:opacity-90 disabled:opacity-50 transition"
+                      className="shrink-0 rounded-xl bg-[var(--accent)] px-3 py-2 text-xs text-white font-semibold hover:opacity-90 disabled:opacity-50 transition"
                     >
                       {renameSaving ? "…" : "Save"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setRenamingId(null)}
-                      className="shrink-0 rounded-lg border border-line px-2 py-1 text-xs text-muted hover:bg-[#f0ece3] transition"
+                      className="shrink-0 rounded-xl border border-[var(--line)] px-3 py-2 text-xs text-[var(--ink-soft)] hover:bg-[var(--surface-muted)] transition"
                     >
                       ✕
                     </button>
@@ -206,7 +206,7 @@ export function ProfileSwitcher({ profiles, plan, onSwitch, onUpgrade }: Props) 
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         {profile.isActive && (
-                          <svg className="w-3.5 h-3.5 shrink-0 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-3.5 h-3.5 shrink-0 text-[var(--accent)]" fill="currentColor" viewBox="0 0 20 20">
                             <path
                               fillRule="evenodd"
                               d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -214,11 +214,11 @@ export function ProfileSwitcher({ profiles, plan, onSwitch, onUpgrade }: Props) 
                             />
                           </svg>
                         )}
-                        <span className={`text-sm truncate ${profile.isActive ? "font-semibold text-ink" : "text-ink"}`}>
+                        <span className={`text-sm truncate ${profile.isActive ? "font-semibold text-[var(--ink-strong)]" : "text-[var(--ink-strong)]"}`}>
                           {switching === profile.id ? "Switching…" : profile.name}
                         </span>
                       </div>
-                      <p className="text-xs text-muted mt-0.5" style={{ marginLeft: profile.isActive ? "1.375rem" : "0" }}>
+                      <p className="text-xs text-[var(--ink-soft)] mt-0.5" style={{ marginLeft: profile.isActive ? "1.375rem" : "0" }}>
                         {profile.holdingCount} holding{profile.holdingCount !== 1 ? "s" : ""} · {profile.currency.toUpperCase()}
                       </p>
                     </button>
@@ -226,7 +226,7 @@ export function ProfileSwitcher({ profiles, plan, onSwitch, onUpgrade }: Props) 
                     {/* Rename button */}
                     <button
                       onClick={() => startRename(profile)}
-                      className="shrink-0 p-1 rounded-lg text-muted hover:text-accent hover:bg-[#f0ece3] transition"
+                      className="shrink-0 p-1.5 rounded-xl text-[var(--ink-soft)] hover:text-[var(--accent)] hover:bg-[var(--surface-muted)] transition"
                       title="Rename portfolio"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,7 +238,7 @@ export function ProfileSwitcher({ profiles, plan, onSwitch, onUpgrade }: Props) 
                     {profiles.length > 1 && (
                       <button
                         onClick={() => setConfirmDeleteId(profile.id)}
-                        className="shrink-0 p-1 rounded-lg text-muted hover:text-bad hover:bg-red-50 transition"
+                        className="shrink-0 p-1.5 rounded-xl text-[var(--ink-soft)] hover:text-[var(--bad)] hover:bg-red-50 transition"
                         title="Delete portfolio"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,7 +251,7 @@ export function ProfileSwitcher({ profiles, plan, onSwitch, onUpgrade }: Props) 
               </div>
             ))}
 
-            <div className="border-t border-line mt-1" />
+            <div className="border-t border-[var(--line)] mt-1" />
 
             <button
               onClick={() => {
@@ -262,7 +262,7 @@ export function ProfileSwitcher({ profiles, plan, onSwitch, onUpgrade }: Props) 
                   setShowAddModal(true);
                 }
               }}
-              className="w-full flex items-center gap-2 px-4 py-3 text-sm text-accent font-semibold hover:bg-[#f0ece3] transition"
+              className="w-full flex items-center gap-2 px-4 py-3 text-sm text-[var(--accent)] font-semibold hover:bg-[var(--surface-muted)] transition"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

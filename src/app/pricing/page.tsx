@@ -66,17 +66,18 @@ export default async function PricingPage() {
   const isLoggedIn = !!session?.user;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="theme-shell flex flex-col">
       <MarketingNav />
 
       <main className="flex-1 max-w-4xl mx-auto px-6 py-16 w-full">
 
         {/* Header */}
         <div className="mb-14 text-center">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-ink tracking-tight mb-4">
+          <p className="theme-kicker mb-4">Pricing</p>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-[var(--ink-strong)] tracking-tight mb-4">
             Simple, honest pricing
           </h1>
-          <p className="text-lg text-muted max-w-xl mx-auto">
+          <p className="text-lg text-[var(--ink-soft)] max-w-xl mx-auto">
             Start for free. Upgrade once if you need more. No subscriptions, no surprises.
           </p>
         </div>
@@ -85,65 +86,59 @@ export default async function PricingPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-16">
 
           {/* Free */}
-          <div
-            className="rounded-2xl border border-line bg-panel p-8 flex flex-col"
-            style={{ boxShadow: "var(--shadow)" }}
-          >
+          <div className="theme-card p-8 flex flex-col bg-white/95">
             <div className="mb-6">
-              <h2 className="text-lg font-bold text-ink mb-1">Free</h2>
-              <div className="text-4xl font-extrabold text-ink tracking-tight">$0</div>
-              <p className="text-sm text-muted mt-1">Forever free. No credit card needed.</p>
+              <h2 className="text-lg font-bold text-[var(--ink-strong)] mb-1">Free</h2>
+              <div className="text-4xl font-extrabold text-[var(--ink-strong)] tracking-tight">$0</div>
+              <p className="text-sm text-[var(--ink-soft)] mt-1">Forever free. No credit card needed.</p>
             </div>
             <ul className="flex flex-col gap-2.5 flex-1 mb-8">
               {FREE_FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-2.5 text-sm text-ink">
-                  <span className="text-accent font-bold text-xs">✓</span>
+                <li key={f} className="flex items-center gap-2.5 text-sm text-[var(--ink-strong)]">
+                  <span className="text-[var(--accent)] font-bold text-xs">✓</span>
                   {f}
                 </li>
               ))}
             </ul>
             <Link
               href={isLoggedIn ? "/dashboard" : "/register"}
-              className="block text-center rounded-xl border border-line bg-white text-ink font-bold py-3 text-sm hover:bg-[#f0ece3] transition"
+              className="theme-button-secondary w-full"
             >
               {isLoggedIn ? "Go to Dashboard" : "Get Started Free"}
             </Link>
           </div>
 
           {/* Pro */}
-          <div
-            className="rounded-2xl border-2 border-accent bg-panel p-8 flex flex-col relative"
-            style={{ boxShadow: "var(--shadow)" }}
-          >
+          <div className="rounded-[28px] p-8 flex flex-col relative text-white shadow-[0_18px_45px_rgba(34,197,94,0.2)] bg-[linear-gradient(135deg,#22c55e_0%,#1ea96c_48%,#60a5fa_100%)]">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              <span className="rounded-full bg-accent text-white text-xs font-bold px-4 py-1 tracking-wide">
+              <span className="rounded-full bg-white/18 text-white text-xs font-bold px-4 py-1 tracking-wide">
                 MOST POPULAR
               </span>
             </div>
             <div className="mb-6">
-              <h2 className="text-lg font-bold text-ink mb-1">Pro</h2>
+              <h2 className="text-lg font-bold text-white mb-1">Pro</h2>
               <div className="flex items-end gap-2">
-                <div className="text-4xl font-extrabold text-ink tracking-tight">$5</div>
-                <div className="text-muted text-sm mb-1.5">AUD one-off</div>
+                <div className="text-4xl font-extrabold text-white tracking-tight">$5</div>
+                <div className="text-white/80 text-sm mb-1.5">AUD one-off</div>
               </div>
-              <p className="text-sm text-muted mt-1">Or $3 USD. Pay once, own it forever.</p>
+              <p className="text-sm text-white/80 mt-1">Or $3 USD. Pay once, own it forever.</p>
             </div>
             <ul className="flex flex-col gap-2.5 flex-1 mb-8">
               {PRO_FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-2.5 text-sm text-ink">
-                  <span className="text-accent font-bold text-xs">✓</span>
+                <li key={f} className="flex items-center gap-2.5 text-sm text-white/95">
+                  <span className="text-white font-bold text-xs">✓</span>
                   {f}
                 </li>
               ))}
             </ul>
             <Link
               href={isLoggedIn ? "/dashboard" : "/register"}
-              className="block text-center rounded-xl bg-accent text-white font-bold py-3 text-sm hover:opacity-90 transition"
+              className="block text-center rounded-2xl bg-white text-[var(--ink-strong)] font-bold py-3 text-sm hover:bg-white/90 transition"
             >
               {isLoggedIn ? "Upgrade in Dashboard" : "Get Started Free"}
             </Link>
             {isLoggedIn && (
-              <p className="text-xs text-muted text-center mt-2">
+              <p className="text-xs text-white/80 text-center mt-2">
                 Use the upgrade button inside your dashboard.
               </p>
             )}
@@ -153,20 +148,17 @@ export default async function PricingPage() {
 
         {/* Feature comparison */}
         <section className="mb-16">
-          <h2 className="text-2xl font-extrabold text-ink mb-6 text-center">What&apos;s included</h2>
-          <div
-            className="rounded-2xl border border-line overflow-hidden"
-            style={{ boxShadow: "var(--shadow)" }}
-          >
+          <h2 className="text-2xl font-extrabold text-[var(--ink-strong)] mb-6 text-center">What&apos;s included</h2>
+          <div className="theme-card overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-[#efe6d8]">
-                  <th className="text-left px-5 py-3 text-[#56483b] font-semibold text-xs uppercase tracking-wider">Feature</th>
-                  <th className="text-center px-5 py-3 text-[#56483b] font-semibold text-xs uppercase tracking-wider">Free</th>
-                  <th className="text-center px-5 py-3 text-accent font-semibold text-xs uppercase tracking-wider">Pro</th>
+                <tr className="bg-[rgba(224,239,255,0.6)]">
+                  <th className="text-left px-5 py-3 text-[var(--ink-soft)] font-semibold text-xs uppercase tracking-wider">Feature</th>
+                  <th className="text-center px-5 py-3 text-[var(--ink-soft)] font-semibold text-xs uppercase tracking-wider">Free</th>
+                  <th className="text-center px-5 py-3 text-[var(--accent)] font-semibold text-xs uppercase tracking-wider">Pro</th>
                 </tr>
               </thead>
-              <tbody className="bg-panel divide-y divide-line">
+              <tbody className="bg-white divide-y divide-[var(--line)]">
                 {[
                   ["Stock holdings", "Up to 5", "Unlimited"],
                   ["Portfolios", "1", "Unlimited"],
@@ -178,10 +170,10 @@ export default async function PricingPage() {
                   ["AUD, USD & INR support", "✓", "✓"],
                   ["Price", "Free", "$5 AUD once"],
                 ].map(([feature, free, pro]) => (
-                  <tr key={feature} className="hover:bg-[#faf7f2] transition-colors">
-                    <td className="px-5 py-3 text-ink font-medium">{feature}</td>
-                    <td className="px-5 py-3 text-center text-muted">{free}</td>
-                    <td className="px-5 py-3 text-center text-accent font-semibold">{pro}</td>
+                  <tr key={feature} className="hover:bg-[var(--surface-muted)] transition-colors">
+                    <td className="px-5 py-3 text-[var(--ink-strong)] font-medium">{feature}</td>
+                    <td className="px-5 py-3 text-center text-[var(--ink-soft)]">{free}</td>
+                    <td className="px-5 py-3 text-center text-[var(--accent)] font-semibold">{pro}</td>
                   </tr>
                 ))}
               </tbody>
@@ -191,12 +183,12 @@ export default async function PricingPage() {
 
         {/* FAQ */}
         <section className="mb-16">
-          <h2 className="text-2xl font-extrabold text-ink mb-8">Frequently asked questions</h2>
+          <h2 className="text-2xl font-extrabold text-[var(--ink-strong)] mb-8">Frequently asked questions</h2>
           <div className="flex flex-col gap-6">
             {FAQS.map((f) => (
               <div key={f.q}>
-                <h3 className="text-sm font-bold text-ink mb-1">{f.q}</h3>
-                <p className="text-sm text-muted leading-relaxed">{f.a}</p>
+                <h3 className="text-sm font-bold text-[var(--ink-strong)] mb-1">{f.q}</h3>
+                <p className="text-sm text-[var(--ink-soft)] leading-relaxed">{f.a}</p>
               </div>
             ))}
           </div>
@@ -204,11 +196,11 @@ export default async function PricingPage() {
 
         {/* CTA */}
         <div className="text-center">
-          <h2 className="text-2xl font-extrabold text-ink mb-3">Start practising today</h2>
-          <p className="text-muted text-sm mb-6">Free forever. Upgrade when you&apos;re ready for more.</p>
+          <h2 className="text-2xl font-extrabold text-[var(--ink-strong)] mb-3">Start practising today</h2>
+          <p className="text-[var(--ink-soft)] text-sm mb-6">Free forever. Upgrade when you&apos;re ready for more.</p>
           <Link
             href={isLoggedIn ? "/dashboard" : "/register"}
-            className="inline-block rounded-xl bg-accent text-white font-bold px-8 py-4 hover:opacity-90 transition"
+            className="theme-button-primary px-8 py-4"
           >
             {isLoggedIn ? "Go to Dashboard" : "Create Free Account"}
           </Link>
